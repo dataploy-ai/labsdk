@@ -16,10 +16,10 @@ import datetime
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
 import durpy
+import replay_instructions
 import local_state
-from runtime import pyexp, go
+from pyexp import pyexp, go
 import json
-from dateutil.parser import parse
 
 
 def __detect_ts_field(df) -> str:
@@ -137,7 +137,7 @@ def __dependency_getter(fqn, eid, ts, val):
         if spec is None:
             raise Exception(f"feature `{fqn}` is not registered locally")
 
-        ts = parse(ts)
+        ts = pd.to_datetime(ts)
 
         df = local_state.__feature_values
         df = df.loc[(df["fqn"] == fqn) & (df["entity_id"] == eid) & (df["timestamp"] <= ts)]
@@ -193,8 +193,10 @@ def __map(rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, en
 
         try:
             res = rt.Exec(req)
-            ret = json.loads(pyexp.MarshalExecResponse(res))
-            return ret["Value"]
+            for i in res.Instructions:
+                inst = pyexp.Instruction(handle=i)
+                replay_instructions.__exec_instruction(inst)
+            return json.loads(pyexp.JsonAny(res))
         except Exception as err:
             raise SystemExit(f"Error while executing PyExp: {str(err)}")
 
@@ -232,8 +234,6 @@ def historical_get(spec):
         key_df.rename(columns={"value": key_feature}, inplace=True)
         key_df.drop(columns=["fqn"], inplace=True)
 
-        key_spec = local_state.spec_by_fqn(key_feature)
-        key_stalenesss = durpy.from_str(key_spec["options"]["staleness"])
         for f in features:
             f_spec = local_state.spec_by_fqn(f)
             f_staleness = durpy.from_str(f_spec["options"]["staleness"])

@@ -26,5 +26,5 @@ def __basic_op(fqn: str, entity_id: str, value, timestamp=None):
 set_feature, update_feature, append_feature = __basic_op, __basic_op, __basic_op
 
 
-def feature_incr(fqn: str, entity_id: str, by: float, timestamp=None):
+def incr_feature(fqn: str, entity_id: str, by: float, timestamp=None):
     pass

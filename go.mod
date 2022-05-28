@@ -1,15 +1,12 @@
-module github.com/natun-ai/sdk/runtime
+module github.com/natun-ai/pysdk
 
 go 1.18
 
 require (
 	github.com/go-logr/logr v1.2.3
-	github.com/go-python/gopy v0.4.0
-	github.com/natun-ai/natun v0.0.0-20220526162320-71e525d0b2ee
-	go.starlark.net v0.0.0-20220328144851-d1966c6b9fcd
+	github.com/go-python/gopy v0.4.1-0.20220527072333-fcad870bd8df
+	github.com/natun-ai/natun v0.0.0-20220528105845-ef405aac9cd2
 )
-
-replace github.com/natun-ai/natun => ../../natun
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
@@ -49,7 +46,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.12.0 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
+	go.starlark.net v0.0.0-20220328144851-d1966c6b9fcd // indirect
+	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/net v0.0.0-20220526153639-5463443f8c37 // indirect
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
@@ -57,14 +55,14 @@ require (
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
-	golang.org/x/tools v0.1.11-0.20220525234230-0e859afa53b2 // indirect
+	golang.org/x/tools v0.1.11-0.20220413170336-afc6aad76eb1 // indirect
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/api v0.25.0-alpha.0 // indirect
 	k8s.io/apiextensions-apiserver v0.25.0-alpha.0 // indirect
 	k8s.io/apimachinery v0.25.0-alpha.0 // indirect
