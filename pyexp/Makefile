@@ -1,32 +1,30 @@
 # Makefile for python interface for package pyexp.
 # gopy build -output=pyexp -vm=python3 github.com/natun-ai/natun/pkg/pyexp
 
-GOCMD=go
-GOBUILD=$(GOCMD) build -mod=mod
-PYTHON=python3
+GOCMD ?= go
+GOBUILD = $(GOCMD) build
+PYTHON ?= python3
 
 # get the CC and flags used to build python:
-GCC = $(shell $(GOCMD) env CC)
-CFLAGS = $(shell $(GOCMD) run ../hack/bindutil.go -vm $(PYTHON) -cflags)
-LDFLAGS = $(shell $(GOCMD) run ../hack/bindutil.go -vm $(PYTHON) -ldflags)
+GCC ?= $(shell $(GOCMD) env CC)
+CFLAGS ?= $(shell $(GOCMD) run ../hack/bindutil.go -vm $(PYTHON) -cflags)
+LDFLAGS ?= $(shell $(GOCMD) run ../hack/bindutil.go -vm $(PYTHON) -ldflags)
+GCC_ARGS ?=
+LIBEXT ?= .so
 
-#MACOS
-GCC_ARGS = -dynamiclib
-LIBEXT = .so
 
-# LINUX
-# CFLAGS = -I/usr/include/python3.9
-# LDFLAGS = -L/usr/lib -lpython3.9 -lcrypt -lpthread -ldl  -lutil -lm -lm
-# GCC_ARGS =
-# LIBEXT = .so
-
-# WINDOWS
-# GCC_ARGS = -shared
-# LIBEXT = .pyd
-
+EXT_PATH ?= build/_pyexp$(LIBEXT)
+GOEXT_PATH ?=build/pyexp_go$(LIBEXT)
+BGOEXT_LIB = $(shell basename $(GOEXT_PATH) | sed 's/\.so$$//')
+EXT_DIR = $(shell dirname $(GOEXT_PATH))
+GOEXT_H_PATH = $(shell basename $(GOEXT_PATH) | sed 's/\.so$$/.h/')
+SED ?= sed -i
 
 ## Install dependencies
 LOCALBIN ?= $(shell pwd)/bin
+ifeq ($(shell $(GOCMD) env GOOS), windows)
+	LOCALBIN = [WorkspacePath]/bin
+endif
 $(LOCALBIN): ## Ensure that the directory exists
 	mkdir -p $(LOCALBIN)
 
@@ -34,16 +32,34 @@ GOPY ?= $(LOCALBIN)/gopy
 .PHONY: gopy
 gopy: $(GOPY) ## Download gopy locally if necessary.
 $(GOPY):
-	GOBIN=$(LOCALBIN) go install github.com/go-python/gopy@master
+	GOOS= GOARCH= GOBIN=$(LOCALBIN) $(GOCMD) install github.com/go-python/gopy@master
+
 
 GOIMPORTS ?= $(LOCALBIN)/goimports
+
 .PHONY: goimports
 goimports: $(GOIMPORTS) ## Download goimports locally if necessary.
 $(GOIMPORTS):
-    GOBIN=$(LOCALBIN) go install golang.org/x/tools/cmd/goimports@master
+	GOOS= GOARCH= GOBIN=$(LOCALBIN) $(GOCMD) install golang.org/x/tools/cmd/goimports@master
 
 .DEFAULT_GOAL := help
 
+## Info
+$(info PYTHON: $(PYTHON))
+$(info GCC: $(GCC))
+$(info CFLAGS: $(CFLAGS))
+$(info LDFLAGS: $(LDFLAGS))
+$(info GCC_ARGS: $(GCC_ARGS))
+$(info LIBEXT: $(LIBEXT))
+$(info GOOS: $(GOOS))
+$(info GOARCH: $(GOARCH))
+$(info EXT_PATH: $(EXT_PATH))
+$(info GOEXT_PATH: $(GOEXT_PATH))
+$(info BGOEXT_PATH: $(BGOEXT_PATH))
+$(info EXT_DIR: $(EXT_DIR))
+$(info GOEXT_H_PATH: $(GOEXT_H_PATH))
+$(info SED: $(SED))
+$(info )
 
 ##@ General
 
@@ -62,47 +78,56 @@ $(GOIMPORTS):
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-.PHONY: info
-info:
-	@echo "Info"
-	@echo "GOCMD: $(GOCMD)"
-	@echo "GOBUILD: $(GOBUILD)"
-	@echo "PYTHON: $(PYTHON)"
-	@echo "GCC: $(GCC)"
-	@echo "CFLAGS: $(CFLAGS)"
-	@echo "LDFLAGS: $(LDFLAGS)"
-	@echo "GCC_ARGS: $(GCC_ARGS)"
-	@echo "LIBEXT: $(LIBEXT)"
-
 ##@ Build
-
-.PHONY: all
-all: gen build ## Build all targets.
 
 .PHONY: gen
 gen: gopy ## Generate the python interface.
-	$(GOPY) gen -no-make -vm=python3 github.com/natun-ai/natun/pkg/pyexp
+	$(GOPY) gen -no-make -vm=$(PYTHON) github.com/natun-ai/natun/pkg/pyexp
 
 .PHONY: build
-build: goimports ## Build the python interface.
-	# build target builds the generated files -- this is what gopy build does..
-	#
+build: ## Build the python interface.
+ifeq ($(shell $(GOCMD) env GOOS), windows)
+	$(MAKE) build-win
+else ifeq ($(shell $(GOCMD) env GOOS), darwin)
+	$(MAKE) build-mac
+else ifeq ($(shell $(GOCMD) env GOOS), linux)
+	$(MAKE) build-linux
+else
+	@echo "Unknown OS: $(shell $(GOCMD) env GOOS)"
+endif
+
+.PHONY: build-win
+build-win: gen ## Build the Windows binary. Don't forget to set GOOS and GOARCH
+	sed -i "s/ PyInit_/ __declspec(dllexport) PyInit_/g" pyexp.c
+	$(MAKE) _build GCC_ARGS=-shared LIBEXT=.pyd GCC_ARGS="-shared $(shell basename $(GOEXT_PATH))" LOCALBIN=" "
+
+.PHONY: build-mac ## Build the mac binary.
+build-mac: gen ## Build the MacOS binary. Don't forget to set GOOS and GOARCH
+	$(MAKE) _build LIBEXT=.so SED='sed -i ""' LDFLAGS="-Wl,-undefined,dynamic_lookup" GCC_ARGS="-L. -I$(BGOEXT_LIB)"
+
+.PHONY: build-linux
+build-linux: gen ## Build the Linux binary. Don't forget to set GOOS and GOARCH
+	$(MAKE) _build LIBEXT=.so LDFLAGS="-Wl,--unresolved-symbols=ignore-all" GCC_ARGS="-L. -I$(BGOEXT_LIB)"
+
+.PHONY: _build
+_build: goimports
+	$(SED) "s/^#cgo LDFLAGS: .*$$/#cgo LDFLAGS: $(LDFLAGS)/g" pyexp.go
 	# this will otherwise be built during go build and may be out of date
 	- rm pyexp.c
 	# goimports is needed to ensure that the imports list is valid
 	$(GOIMPORTS) -w pyexp.go
 	# generate pyexp_go$(LIBEXT) from pyexp.go -- the cgo wrappers to go functions
-	$(GOBUILD) -buildmode=c-shared -o pyexp_go$(LIBEXT) pyexp.go
+	CGO_LDFLAGS="$(LDFLAGS)" CGO_CFLAGS="$(CFLAGS) -Wno-error -Wno-implicit-function-declaration -Wno-int-conversion" $(GOBUILD) -buildmode=c-shared -o $(GOEXT_PATH)  -ldflags="-s -w" pyexp.go
 	# use pybindgen to build the pyexp.c file which are the CPython wrappers to cgo wrappers..
 	# note: pip install pybindgen to get pybindgen if this fails
-	$(PYTHON) build.py
+	cp build.py $(EXT_DIR)/
+	$(SED) "s/^mod\.add_include\(.*\)$$/mod.add_include('\"${shell echo $(GOEXT_H_PATH) | sed 's/\//\\\//g'}\"')/" $(EXT_DIR)/build.py
+	cd $(EXT_DIR) && $(PYTHON) build.py
 	# build the _pyexp$(LIBEXT) library that contains the cgo and CPython wrappers
 	# generated pyexp.py python wrapper imports this c-code package
+	cd $(EXT_DIR) && $(GCC) pyexp.c $(GCC_ARGS) -o $(shell basename $(EXT_PATH)) $(CFLAGS) $(LDFLAGS) -fPIC --shared -w
+	rm $(EXT_DIR)/build.py $(EXT_DIR)/pyexp.c
 
-	# windows-only sed hack here to fix pybindgen declaration of PyInit
-    # sed -i "s/ PyInit_/ __declspec(dllexport) PyInit_/g" pyexp.c
-
-	$(GCC) pyexp.c $(GCC_ARGS) pyexp_go$(LIBEXT) -o _pyexp$(LIBEXT) $(CFLAGS) $(LDFLAGS) -fPIC --shared -w
-	
-
-
+.PHONY: cleanup
+cleanup:
+	rm -rf $(filter-out bin,$(filter-out Makefile,$(wildcard *)))

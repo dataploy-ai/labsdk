@@ -1,3 +1,8 @@
 .idea
 _playground
 *.cpython*
+pyexp/*
+!pyexp/Makefile
+build/
+dist/
+*.egg-info/

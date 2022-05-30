@@ -1,2 +1,2 @@
-global-include *.so *.py
+global-include *.py Makefile
 global-exclude build.py
