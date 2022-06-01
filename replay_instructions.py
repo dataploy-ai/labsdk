@@ -41,10 +41,14 @@ def __exec_instruction(inst: pyexp.Instruction):
 
 def _exec_append(inst):
     df = _get_recent(inst)
+    spec = _inst_spec(inst.FQN)
+    if not spec["options"]["primitive"].startswith("[]"):
+        raise Exception("Append is not supported for scalars")
+
     ts = pd.to_datetime(pyexp.PyTimeRFC3339(inst.Timestamp))
     o = {
         "entity_id": inst.EntityID,
-        "value": [pyexp.JsonAny(inst.Value)],
+        "value": [pyexp.JsonAny(inst, "Value")],
         "timestamp": ts,
         "fqn": inst.FQN,
     }
@@ -59,7 +63,7 @@ def _exec_incr(inst):
     ts = pd.to_datetime(pyexp.PyTimeRFC3339(inst.Timestamp))
     o = {
         "entity_id": inst.EntityID,
-        "value": pyexp.JsonAny(inst.Value),
+        "value": pyexp.JsonAny(inst, "Value"),
         "timestamp": ts,
         "fqn": inst.FQN,
     }
@@ -94,11 +98,10 @@ def _exec_update(inst):
 
 
 def _exec_set(inst: pyexp.Instruction):
-    spec = _inst_spec(inst.FQN)
     ts = pd.to_datetime(pyexp.PyTimeRFC3339(inst.Timestamp))
     local_state.store_feature_values(pandas.DataFrame.from_records([{
         "entity_id": inst.EntityID,
-        "value": pyexp.JsonAny(inst.Value),
+        "value": pyexp.JsonAny(inst, "Value"),
         "timestamp": ts,
         "fqn": inst.FQN,
     }]))

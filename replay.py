@@ -196,7 +196,7 @@ def __map(rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, en
             for i in res.Instructions:
                 inst = pyexp.Instruction(handle=i)
                 replay_instructions.__exec_instruction(inst)
-            return json.loads(pyexp.JsonAny(res))
+            return json.loads(pyexp.JsonAny(res, "Value"))
         except Exception as err:
             raise SystemExit(f"Error while executing PyExp: {str(err)}")
 
