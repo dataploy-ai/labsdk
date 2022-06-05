@@ -94,7 +94,12 @@ class BuildGoPy(_build_ext):
         # Build the go package
         go_ext = f"lib{pkg}_impl"
         env = os.environ.copy()
+        if sys.platform == "win32":
+            env["CC"] = "gcc"
+        if sys.platform == "linux":
+            env["CC"] = "gcc"
         if sys.platform == "darwin":
+            env["CC"] = "clang"
             env["CGO_LDFLAGS"] = f"-Wl,-dylib -Wl,-install_name,{base_path}/{go_ext}.{so_ext}"
 
         check_output(["go", "build",
