@@ -45,7 +45,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BEFORE_ALL_LINUX: curl -L https://git.io/vQhTU | bash -s -- --version 1.18.3  && source /root/.bashrc
+          CIBW_BEFORE_ALL_LINUX: if command -v apk; then apk add coreutils; fi && curl -L https://git.io/vQhTU | bash -s -- --version 1.18.3  && source /root/.bashrc
           CIBW_ENVIRONMENT_LINUX: PATH=$PATH:/$HOME/.go/bin
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
