@@ -1,2 +1,2 @@
-global-include *.py Makefile
+global-include *.py Makefile go.mod go.sum
 global-exclude build.py

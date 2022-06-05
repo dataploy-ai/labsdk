@@ -1,4 +1,4 @@
-module github.com/natun-ai/pysdk
+module github.com/natun-ai/labsdk
 
 go 1.18
 

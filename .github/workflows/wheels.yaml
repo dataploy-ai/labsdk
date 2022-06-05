@@ -1,11 +1,55 @@
-name: Build
+name: Build wheels
 
-on: [ push, pull_request ]
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        default: alpha
+        description: What type of release is this?
+        required: true
+        type: choice
+        options:
+          - alpha
+          - beta
+          - rc
+          - stable
 
 jobs:
-  # https://github.com/scikit-learn/scikit-learn/blob/main/.github/workflows/wheels.yml
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Prerelease prep
+        id: prerelease
+        run: |
+          if [ "${{ github.event.inputs.release_type }}" == "stable" ]; then
+            echo "::set-output name=version_format::v\${major}.\${minor}.\${patch}"
+            echo "::set-output name=prerelease::false"
+          else
+            echo "::set-output name=prerelease::true"
+            echo "::set-output name=version_format::v\${major}.\${minor}.\${patch}-${{ github.event.inputs.release_type }}\${increment}"
+          fi
+        shell: bash
+      - name: Calculate Semver
+        uses: paulhatch/semantic-version@v5.0.0-alpha
+        id: version
+        with:
+          # The prefix to use to identify tags
+          tag_prefix: "v"
+          major_pattern: "/^(:warning:|⚠/).*/"
+          # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
+          minor_pattern: "/^(:sparkles:|✨).*/"
+          # A string to determine the format of the version output
+          version_format: "${{ steps.prerelease.outputs.version_format }}"
+
   build_wheels:
-    name: cp${{ matrix.python }}-${{ matrix.platform_id }}
+    needs: [ version ]
+    name: "${{ needs.version.outputs.version }}: cp${{ matrix.python }}-${{ matrix.platform_id }}"
     runs-on: ${{ matrix.os }}
     strategy:
       # Ensure that a wheel builder finishes even if another fails
@@ -13,14 +57,12 @@ jobs:
       matrix:
         include:
           # Window 64 bit
-          - { "os": "windows-latest", "python": 38, "platform_id": "win_amd64", arch: "x86" }
-          - { "os": "windows-latest", "python": 38, "platform_id": "win_amd64", arch: "amd64" }
-          - { "os": "windows-latest", "python": 39, "platform_id": "win_amd64", arch: "x86" }
-          - { "os": "windows-latest", "python": 39, "platform_id": "win_amd64", arch: "amd64" }
-          - { "os": "windows-latest", "python": 310, "platform_id": "win_amd64", arch: "x86" }
-          - { "os": "windows-latest", "python": 310, "platform_id": "win_amd64", arch: "amd64" }
+          - { "os": "windows-latest", "python": 38, "platform_id": "win_amd64", arch: "AMD64" }
+          - { "os": "windows-latest", "python": 39, "platform_id": "win_amd64", arch: "AMD64" }
+          - { "os": "windows-latest", "python": 310, "platform_id": "win_amd64", arch: "AMD64" }
 
           # Linux 64 bit #aarch64=arm64 i686=386
+          - { "os": "ubuntu-latest", "python": 37, "platform_id": "manylinux_x86_64", arch: "x86_64" }
           - { "os": "ubuntu-latest", "python": 38, "platform_id": "manylinux_x86_64", arch: "x86_64" }
           - { "os": "ubuntu-latest", "python": 38, "platform_id": "manylinux_aarch64", arch: "aarch64" }
           - { "os": "ubuntu-latest", "python": 39, "platform_id": "manylinux_x86_64", arch: "x86_64" }
@@ -67,7 +109,7 @@ jobs:
         run: cp C:\cygwin\bin\x86_64-w64-mingw32-gcc.exe C:\cygwin\bin\gcc.exe
 
       - name: Set base64 flags
-        if: runner.os != "macOS"
+        if: runner.os != 'macOS'
         id: base64_flags
         run: echo "::set-output name=flags::-w0"
       - name: Encode platform data
@@ -82,10 +124,10 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
 
           CIBW_BEFORE_ALL_LINUX: curl -L https://git.io/vQhTU | bash -s -- --version 1.18.3
-          CIBW_ENVIRONMENT: BUILD_MATRIX="${{ steps.platform_data.outputs.data }}"
-          CIBW_ENVIRONMENT_LINUX: BUILD_MATRIX="${{ steps.platform_data.outputs.data }}" PATH=$PATH:/$HOME/.go/bin
+          CIBW_ENVIRONMENT: BUILD_MATRIX="${{ steps.platform_data.outputs.data }}" BUILD_VERSION="${{ needs.version.outputs.version }}"
+          CIBW_ENVIRONMENT_LINUX: BUILD_MATRIX="${{ steps.platform_data.outputs.data }}" BUILD_VERSION="${{ needs.version.outputs.version }}" PATH=$PATH:/$HOME/.go/bin
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path natun/pyexp -w {dest_dir} {wheel}"
 
           CIBW_MANYLINUX_X86_64_IMAGE: 'manylinux_2_24'
           CIBW_MANYLINUX_AARCH64_IMAGE: 'manylinux_2_24'
@@ -96,3 +138,37 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
+  make_sdist:
+    needs: [ version ]
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Optional, use if you use setuptools_scm
+          submodules: true  # Optional, use if you have submodules
+      - name: Override the version in the dist code
+        run: |
+          sed -i "s/^version *= *.*/version = '${{ needs.version.outputs.version }}'/" setup.py
+      - name: Build SDist
+        env:
+          BUILD_VERSION: "${{ needs.version.outputs.version }}"
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+  upload_all:
+    name: "Upload the wheels to PyPI"
+    needs: [ build_wheels, make_sdist ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}

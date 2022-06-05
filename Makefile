@@ -12,7 +12,7 @@ build-wheel:
 build-repair:
 	$(eval WHEEL=$(shell ls -1t dist/*.whl | head -n1))
 ifeq ($(shell go env GOOS), windows)
-	@echo "skipping repair on windows..."
+	delvewheel repair --add-path natun/pyexp -w repaired_wheel $(WHEEL)
 else ifeq ($(shell go env GOOS), darwin)
 	delocate-listdeps $(WHEEL) &&  delocate-wheel -w repaired_wheel -v $(WHEEL)
 else ifeq ($(shell go env GOOS), linux)
@@ -24,4 +24,4 @@ endif
 .PHONY: cleanup
 cleanup:
 	@echo "cleaning up..."
-	rm -rf build/ dist/ natun_pysdk.egg-info/ .egg natun/pyexp repaired_wheel
+	rm -rf build/ dist/ natun_labsdk.egg-info/ .egg natun/pyexp repaired_wheel

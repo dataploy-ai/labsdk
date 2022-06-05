@@ -6,3 +6,4 @@ dist/
 bin/
 natun/pyexp/
 *.egg-info/
+.DS_Store

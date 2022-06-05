@@ -1,3 +1,5 @@
+import base64
+import json
 import os
 import re
 import shutil
@@ -15,17 +17,36 @@ with open("./README.md", "r") as fh:
 class BuildGoPy(_build_ext):
     """Custom command to build extension from Go source files"""
 
-    def ensure_go(self):
-        """Ensure that the go compiler is available"""
+    def finalize_options(self):
+        """Force MinGW to compile our code"""
+        if sys.platform == "win32":
+            self.compiler = "mingw32"
+
+            # Fix issue with no CC that cause hanging
+            from distutils import sysconfig as sc
+            sc.get_config_vars()  # first make sure the global config var was created
+            sc._config_vars["CC"] = "gcc"
+
+        _build_ext.finalize_options(self)
+
+    def ensure_build_tools(self):
+        """Ensure that the building compilers are available"""
         try:
             check_output(['go', 'version'])
         except OSError:
             raise RuntimeError('Go compiler not found')
+        if sys.platform == "win32":
+            try:
+                ret = check_output(['gcc', '-v', '--version'])
+                if 'mingw32' not in str(ret):
+                    raise RuntimeError('GCC compiler is not MinGW')
+            except OSError:
+                raise RuntimeError('MinGW32 GCC compiler not found')
 
     gobin = f"{os.getcwd()}/bin"
 
     def install_binaries(self):
-        self.ensure_go()
+        self.ensure_build_tools()
 
         env = os.environ.copy()
         env["GOBIN"] = self.gobin
@@ -52,8 +73,33 @@ class BuildGoPy(_build_ext):
             return '-Wl,--unresolved-symbols=ignore-all'
         raise RuntimeError('Unsupported platform: {}'.format(sys.platform))
 
+    def go_env(self, so_path):
+        env = os.environ.copy()
+        env["CGO_ENABLED"] = "1"
+        if sys.platform == "win32":
+            env["CC"] = "gcc"
+        if sys.platform == "linux":
+            env["CC"] = "gcc"
+        if sys.platform == "darwin":
+            env["CC"] = "clang"
+            env["CGO_LDFLAGS"] = f"-Wl,-dylib -Wl,-install_name,{so_path}"
+
+        if "BUILD_MATRIX" in env:
+            platform = json.loads(base64.b64decode(env["BUILD_MATRIX"]).decode("utf-8"))
+            a = platform["arch"].lower()
+            if a == "x86_64":
+                env["GOARCH"] = "amd64"
+            elif a == "x86":
+                env["GOARCH"] = "386"
+            elif a == "aarch64":
+                env["GOARCH"] = "arm64"
+            else:
+                env["GOARCH"] = a
+
+        return env
+
     def build_extension(self, ext) -> None:
-        self.ensure_go()
+        self.ensure_build_tools()
         self.install_binaries()
 
         base_path = os.path.abspath("/".join(ext.name.split(".")))
@@ -87,20 +133,13 @@ class BuildGoPy(_build_ext):
 
         so_ext = "so"
         if sys.platform == "win32":
-            so_ext = "pyd"
+            so_ext = "dll"
         if sys.platform == "darwin":
             so_ext = "dylib"
 
         # Build the go package
         go_ext = f"lib{pkg}_impl"
-        env = os.environ.copy()
-        if sys.platform == "win32":
-            env["CC"] = "gcc"
-        if sys.platform == "linux":
-            env["CC"] = "gcc"
-        if sys.platform == "darwin":
-            env["CC"] = "clang"
-            env["CGO_LDFLAGS"] = f"-Wl,-dylib -Wl,-install_name,{base_path}/{go_ext}.{so_ext}"
+        env = self.go_env(f"{base_path}/{go_ext}.{so_ext}")
 
         check_output(["go", "build",
                       "-buildmode", "c-shared", "-o", f"{go_ext}.{so_ext}",
@@ -154,15 +193,19 @@ class BuildGoPy(_build_ext):
         _build_ext.build_extension(self, ext)
 
 
+version = "dev"
+if os.environ.get("BUILD_VERSION") is not None:
+    version = os.environ.get("BUILD_VERSION")
+
 setuptools.setup(
-    name="natun-pysdk",
-    version="0.1.0",
+    name="natun-labsdk",
+    version=version,
     author="Almog Baku",
     author_email="almog@natun.ai",
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/natun-ai/pysdk",
+    url="https://github.com/natun-ai/labsdk",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
