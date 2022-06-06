@@ -183,17 +183,17 @@ def __dependency_getter(fqn, eid, ts, val):
 def __map(rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, entity_id_field: str = None):
     def map(row: pd.Series):
         ts = row[timestamp_field]
-        row.drop(timestamp_field, inplace=True)
+        # row.drop(timestamp_field, inplace=True)
 
         headers = go.nil
         if headers_field is not None:
             headers = row[headers_field]
-            row.drop(headers_field, inplace=True)
+            # row.drop(headers_field, inplace=True)
 
         entity_id = ""
         if entity_id_field is not None:
             entity_id = row[entity_id_field]
-            row.drop(entity_id_field, inplace=True)
+            # row.drop(entity_id_field, inplace=True)
 
         if isinstance(ts, datetime.datetime):
             ts = ts.isoformat("T")
