@@ -12,5 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .decorators import *
-from .types import *
+from enum import Enum
+
+
+class AggrFn(Enum):
+    Unknown = 0
+    Sum = 1
+    Avg = 2
+    Max = 3
+    Min = 4
+    Count = 5

@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/go-logr/logr v1.2.3
 	github.com/go-python/gopy v0.4.1-0.20220527072333-fcad870bd8df
-	github.com/natun-ai/natun v0.0.0-20220606151218-3727cae97119
+	github.com/natun-ai/natun v0.0.0-20220606230723-9633b1f1053d
 )
 
 require (

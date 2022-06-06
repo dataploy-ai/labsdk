@@ -12,14 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 import pandas as pd
+
+from natun import types
 
 # registered features
 spec_registry = []
 
 
+def check_valid_fqn(spec, fqn):
+    if spec["kind"] != "feature":
+        raise Exception(f"`{fqn}` is not a feature")
+    if spec["fqn"] != fqn:
+        fn = re.match(r"^(.*)\[(.*)\]$", fqn)
+        if fn is not None:
+            fn = types.AggrFn[fn.group(2).title()]
+            if "aggr" not in spec["options"]:
+                err = f"feature `{fqn}` is not an aggregation"
+                raise Exception(err)
+            if fn not in spec["options"]["aggr"]:
+                err = f"feature `{spec['fqn']}` doesn't include aggregation `{fn}`"
+                raise Exception(err)
+        else:
+            raise Exception(f"feature `{fqn}` is not a invalid")
+
+
 def spec_by_fqn(fqn: str):
-    return next(filter(lambda m: m["kind"] == "feature" and m["fqn"] == fqn.split("[")[0], spec_registry), None)
+    spec = next(filter(lambda m: m["kind"] == "feature" and m["fqn"] == fqn.split("[")[0], spec_registry), None)
+    check_valid_fqn(spec, fqn)
+    return spec
 
 
 def spec_by_src_name(src_name: str):

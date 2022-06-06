@@ -1,16 +1,4 @@
-#  Copyright (c) 2022 Natun.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright 2022 Natun.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import pandas
 import pandas as pd
 
-from . import durpy
+from . import durpy, local_state
 from .pyexp import pyexp
-from . import local_state
 
 
 def _inst_spec(fqn):
@@ -93,7 +81,7 @@ def _get_recent(inst):
     df = df.loc[(df["fqn"] == inst.FQN) & (df["entity_id"] == inst.EntityID) & (df["timestamp"] <= ts)]
 
     staleness = durpy.from_str(spec["options"]["staleness"])
-    if staleness.microseconds > 0:
+    if staleness.total_seconds() > 0:
         df = df.loc[(df["timestamp"] >= ts - staleness)]
 
     df = df.sort_values(by=["timestamp"], ascending=False).head(1)

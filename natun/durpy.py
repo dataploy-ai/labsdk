@@ -2,19 +2,19 @@
 # MIT License
 # -*- coding: UTF-8 -*-
 
-import re
 import datetime
+import re
 
-_nanosecond_size  = 1
+_nanosecond_size = 1
 _microsecond_size = 1000 * _nanosecond_size
 _millisecond_size = 1000 * _microsecond_size
-_second_size      = 1000 * _millisecond_size
-_minute_size      = 60   * _second_size
-_hour_size        = 60   * _minute_size
-_day_size         = 24   * _hour_size
-_week_size        = 7    * _day_size
-_month_size       = 30   * _day_size
-_year_size        = 365  * _day_size
+_second_size = 1000 * _millisecond_size
+_minute_size = 60 * _second_size
+_hour_size = 60 * _minute_size
+_day_size = 24 * _hour_size
+_week_size = 7 * _day_size
+_month_size = 30 * _day_size
+_year_size = 365 * _day_size
 
 units = {
     "ns": _nanosecond_size,
@@ -22,13 +22,13 @@ units = {
     "µs": _microsecond_size,
     "μs": _microsecond_size,
     "ms": _millisecond_size,
-    "s":  _second_size,
-    "m":  _minute_size,
-    "h":  _hour_size,
-    "d":  _day_size,
-    "w":  _week_size,
+    "s": _second_size,
+    "m": _minute_size,
+    "h": _hour_size,
+    "d": _day_size,
+    "w": _week_size,
     "mm": _month_size,
-    "y":  _year_size,
+    "y": _year_size,
 }
 
 
@@ -38,6 +38,13 @@ class DurationError(ValueError):
 
 def from_str(duration):
     """Parse a duration string to a datetime.timedelta"""
+
+    # allow negative durations
+    try:
+        if int(duration) < 0:
+            return datetime.timedelta()
+    except Exception:
+        pass
 
     if duration in ("0", "+0", "-0"):
         return datetime.timedelta()
@@ -63,6 +70,7 @@ def from_str(duration):
     microseconds = total / _microsecond_size
     return datetime.timedelta(microseconds=sign * microseconds)
 
+
 def to_str(delta, extended=False):
     """Format a datetime.timedelta to a duration string"""
 
@@ -79,7 +87,6 @@ def to_str(delta, extended=False):
 
 
 def _to_str_small(nanoseconds, extended):
-
     result_str = ""
 
     if not nanoseconds:
@@ -102,7 +109,6 @@ def _to_str_small(nanoseconds, extended):
 
 
 def _to_str_large(nanoseconds, extended):
-
     result_str = ""
 
     if extended:

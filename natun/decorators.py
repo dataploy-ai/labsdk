@@ -1,16 +1,4 @@
-#  Copyright (c) 2022 Natun.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Copyright 2022 Natun.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,24 +14,14 @@
 
 import datetime
 import inspect
-from enum import Enum
-from . import replay
-from . import local_state
+
+from . import types, replay, local_state
 
 
-class AggrFn(Enum):
-    Unknown = 0
-    Sum = 1
-    Avg = 2
-    Max = 3
-    Min = 4
-    Count = 5
-
-
-def aggr(funcs: [AggrFn]):
+def aggr(funcs: [types.AggrFn]):
     def decorator(func):
         for f in funcs:
-            if f == AggrFn.Unknown:
+            if f == types.AggrFn.Unknown:
                 raise Exception("Unknown aggr function")
         func.aggr = funcs
         return func
@@ -199,7 +177,7 @@ def feature_set(register=False, options=None):
             options["desc"] = func.__doc__
 
         fqn = f"{options['name']}.{options['namespace']}"
-        spec = {"kind": "featureset", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
+        spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
         func.feature_set_spec = spec
         func.historical_get = replay.historical_get(spec)
         if register:
@@ -247,7 +225,7 @@ def __feature_manifest(f):
     return t
 
 
-def __featureset_manifest(f):
+def __feature_set_manifest(f):
     nl = "\n"
     return f"""apiVersion: k8s.natun.ai/v1alpha1
 kind: FeatureSet
@@ -271,8 +249,8 @@ def manifests(save_to_tmp=False):
     for m in local_state.spec_registry:
         if m["kind"] == "feature":
             mfts.append(__feature_manifest(m))
-        elif m["kind"] == "featureset":
-            mfts.append(__featureset_manifest(m))
+        elif m["kind"] == "feature_set":
+            mfts.append(__feature_set_manifest(m))
         else:
             raise Exception("Invalid manifest")
 
