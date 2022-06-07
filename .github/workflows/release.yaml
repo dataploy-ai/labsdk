@@ -1,4 +1,4 @@
-name: Build wheels
+name: Release and publish a version
 
 on:
   workflow_dispatch:
