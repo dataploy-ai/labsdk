@@ -214,6 +214,13 @@ def historical_get(spec):
     def get(since: datetime.datetime, until: datetime.datetime):
         if spec["kind"] != "feature_set":
             raise Exception("Not a FeatureSet")
+        if isinstance(since, str):
+            since = pd.to_datetime(since)
+        if isinstance(until, str):
+            until = pd.to_datetime(until)
+
+        if since > until:
+            raise Exception("since > until")
 
         if since.tzinfo is None:
             since = since.replace(tzinfo=datetime.timezone.utc)
