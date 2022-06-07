@@ -220,7 +220,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/natun-ai/labsdk",
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude="_test"),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",

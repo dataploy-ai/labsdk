@@ -15,6 +15,7 @@
 import datetime
 import json
 import types as pytypes
+import sys
 
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
@@ -69,7 +70,7 @@ def __detect_entity_id(df) -> str:
 
 
 def replay(spec):
-    def _replay(df: pd.DataFrame, timestamp_field: str = None, headers_field: str = None, entity_id_field: str = None,
+    def replay(df: pd.DataFrame, timestamp_field: str = None, headers_field: str = None, entity_id_field: str = None,
                 store_locally=True):
         df = df.copy()
         if spec["kind"] != "feature":
@@ -78,13 +79,15 @@ def replay(spec):
         if timestamp_field is None:
             timestamp_field = __detect_ts_field(df)
             if timestamp_field is None:
-                raise Exception("No timestamp field found")
+                raise Exception("No `timestamp` field detected for the dataframe.\n"
+                                "   Please specify using the `timestamp_field` argument")
         df[timestamp_field] = pd.to_datetime(df[timestamp_field])  # normalize
 
         if entity_id_field is None:
             entity_id_field = __detect_entity_id(df)
             if entity_id_field is None:
-                raise Exception("No entity_id field found")
+                raise Exception("No `entity_id` field detected for the dataframe.\n"
+                                "   Please specify using the `entity_id_field` argument")
 
         if headers_field is None:
             headers_field = __detect_headers_field(df)
@@ -132,7 +135,18 @@ def replay(spec):
             local_state.store_feature_values(feature_values)
         return feature_values
 
-    return _replay
+    def _wrapped(*args, **kwargs):
+        try:
+            return replay(*args, **kwargs)
+        except Exception as e:
+            back_frame = e.__traceback__.tb_frame.f_back
+            tb = pytypes.TracebackType(tb_next=None,
+                                       tb_frame=back_frame,
+                                       tb_lasti=back_frame.f_lasti,
+                                       tb_lineno=back_frame.f_lineno)
+            raise Exception(f"{spec['src_name']}: {str(e)}").with_traceback(tb)
+
+    return _wrapped
 
 
 def __dependency_getter(fqn, eid, ts, val):
@@ -211,7 +225,7 @@ def __map(spec, rt: pyexp.Runtime, timestamp_field: str, headers_field: str = No
 
 
 def historical_get(spec):
-    def get(since: datetime.datetime, until: datetime.datetime):
+    def historical_get(since: datetime.datetime, until: datetime.datetime):
         if spec["kind"] != "feature_set":
             raise Exception("Not a FeatureSet")
         if isinstance(since, str):
@@ -269,9 +283,9 @@ def historical_get(spec):
 
         return key_df.reset_index(drop=True)
 
-    def wrapped_get(*args, **kwargs):
+    def _wrapped(*args, **kwargs):
         try:
-            return get(*args, **kwargs)
+            return historical_get(*args, **kwargs)
         except Exception as e:
             back_frame = e.__traceback__.tb_frame.f_back
             tb = pytypes.TracebackType(tb_next=None,
@@ -280,4 +294,4 @@ def historical_get(spec):
                                        tb_lineno=back_frame.f_lineno)
             raise Exception(f"{spec['src_name']}: {str(e)}").with_traceback(tb)
 
-    return wrapped_get
+    return _wrapped

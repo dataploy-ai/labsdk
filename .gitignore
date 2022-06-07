@@ -1,5 +1,4 @@
 .idea
-_playground
 *.cpython*
 build/
 dist/
