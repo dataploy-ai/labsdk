@@ -164,7 +164,7 @@ jobs:
           path: dist/*.tar.gz
   release:
     name: "Release and publish the version"
-    needs: [ build_wheels, make_sdist ]
+    needs: [ version, build_wheels, make_sdist ]
     runs-on: ubuntu-latest
     steps:
       - name: Tag
