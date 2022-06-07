@@ -51,7 +51,9 @@ ifeq (, $(shell which goimports))
 	@echo "GoImports not found. Installing..."
 	go install golang.org/x/tools/cmd/goimports@latest
 endif
-
+ifeq (,$(shell $(PYTHON) -m pip list | grep -F pybindgen))
+	$(PYTHON) -m pip install pybindgen
+endif
 
 .PHONY: local-build
 local-build: _verfiy-deps ## Build the PyExp extension for local development purposes

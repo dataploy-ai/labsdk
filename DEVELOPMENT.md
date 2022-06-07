@@ -5,12 +5,16 @@
 2. Gopy & Goimports installed on $GOBIN
    1. `go install github.com/go-python/gopy@master`
    2. `go install golang.org/x/tools/cmd/goimports@latest`
-3. For building the wheels, you need to have the following packages installed:
+3. PyBindGen installed - `pip install pybindgen`
+4. For building the wheels, you need to have the following packages installed:
    1. build
    2. wheel
    3. auditwheel - linux
    4. delocate - macos
    5. delvewheel - windows
+
+## Enable "Developer mode"
+Set the environment variable `NATUN_DEV` to `1`
 
 ## Compiling the module locally
 You can utilize the Make script to compile the module:

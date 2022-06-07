@@ -14,6 +14,7 @@
 
 import datetime
 import json
+import types as pytypes
 
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
@@ -93,12 +94,12 @@ def replay(spec):
         df["__natun.ret__"] = df.apply(__map(rt, timestamp_field, headers_field, entity_id_field), axis=1)
 
         # flip dataframe to feature_value df
-        feature_values = df.filter([entity_id_field, "__natun.ret__", timestamp_field], axis=1)
-        feature_values.rename(columns={
+        feature_values = df.filter([entity_id_field, "__natun.ret__", timestamp_field], axis=1) \
+            .rename(columns={
             entity_id_field: "entity_id",
             "__natun.ret__": "value",
             timestamp_field: "timestamp",
-        }, inplace=True)
+        })
 
         if "aggr" not in spec["options"]:
             feature_values.insert(0, "fqn", spec["fqn"])
@@ -107,7 +108,7 @@ def replay(spec):
             return feature_values
 
         # aggregations
-        feature_values.set_index('timestamp', inplace=True)
+        feature_values = feature_values.set_index('timestamp')
         win = to_offset(durpy.from_str(spec["options"]["staleness"]))
         fields = []
         for aggr in spec["options"]["aggr"]:
@@ -124,10 +125,9 @@ def replay(spec):
                 .reset_index(0, drop=True)
             fields.append(f)
 
-        feature_values.reset_index(inplace=True)
-        feature_values.drop(columns=["value"], inplace=True)
-        feature_values = feature_values.melt(id_vars=["timestamp", "entity_id"], value_vars=fields,
-                                             var_name="fqn", value_name="value")
+        feature_values = feature_values.reset_index().drop(columns=["value"]). \
+            melt(id_vars=["timestamp", "entity_id"], value_vars=fields,
+                 var_name="fqn", value_name="value")
         if store_locally:
             local_state.store_feature_values(feature_values)
         return feature_values
@@ -176,17 +176,17 @@ def __dependency_getter(fqn, eid, ts, val):
 def __map(rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, entity_id_field: str = None):
     def map(row: pd.Series):
         ts = row[timestamp_field]
-        # row.drop(timestamp_field, inplace=True)
+        # row = row.drop(timestamp_field)
 
         headers = go.nil
         if headers_field is not None:
             headers = row[headers_field]
-            # row.drop(headers_field, inplace=True)
+            # row = row.drop(headers_field)
 
         entity_id = ""
         if entity_id_field is not None:
             entity_id = row[entity_id_field]
-            # row.drop(entity_id_field, inplace=True)
+            # row = row.drop(entity_id_field)
 
         if isinstance(ts, datetime.datetime):
             ts = ts.isoformat("T")
@@ -248,16 +248,16 @@ def historical_get(spec):
 
         key_df = df.loc[df["fqn"] == key_feature]
 
-        key_df.rename(columns={"value": key_feature}, inplace=True)
-        key_df.drop(columns=["fqn"], inplace=True)
+        key_df = key_df.rename(columns={"value": key_feature})
+        key_df = key_df.drop(columns=["fqn"])
 
         for f in features:
             f_spec = local_state.spec_by_fqn(f)
             f_staleness = durpy.from_str(f_spec["options"]["staleness"])
 
             f_df = df.loc[df["fqn"] == f]
-            f_df.rename(columns={"value": f}, inplace=True)
-            f_df.drop(columns=["fqn"], inplace=True)
+            f_df = f_df.rename(columns={"value": f})
+            f_df = f_df.drop(columns=["fqn"])
             # f_df["start_ts"] = f_df["end_ts"] - f_staleness
 
             if f_staleness.total_seconds() > 0:
@@ -269,4 +269,15 @@ def historical_get(spec):
 
         return key_df.reset_index(drop=True)
 
-    return get
+    def wrapped_get(*args, **kwargs):
+        try:
+            return get(*args, **kwargs)
+        except Exception as e:
+            back_frame = e.__traceback__.tb_frame.f_back
+            tb = pytypes.TracebackType(tb_next=None,
+                                       tb_frame=back_frame,
+                                       tb_lasti=back_frame.f_lasti,
+                                       tb_lineno=back_frame.f_lineno)
+            raise Exception(f"{spec['src_name']}: {str(e)}").with_traceback(tb)
+
+    return wrapped_get

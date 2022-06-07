@@ -14,6 +14,7 @@
 
 import datetime
 import inspect
+import types as pytypes
 
 from . import types, replay, local_state
 
@@ -61,9 +62,10 @@ def register(primitive, freshness: str, staleness: str, options=None):
     if options is None:
         options = {}
 
+    @wrap_decorator_err
     def decorator(func):
         if inspect.signature(func) != inspect.signature(_stub_feature):
-            raise Exception(f"{func.name} have an invalid signature for a Feature definition")
+            raise Exception(f"{func.__name__} have an invalid signature for a Feature definition")
 
         options["freshness"] = freshness
         options["staleness"] = staleness
@@ -140,14 +142,15 @@ def feature_set(register=False, options=None):
     if options is None:
         options = {}
 
+    @wrap_decorator_err
     def decorator(func):
         if inspect.signature(func) != inspect.signature(lambda: []):
-            raise Exception(f"{func.name} have an invalid signature for a FeatureSet definition")
+            raise Exception(f"{func.__name__} have an invalid signature for a FeatureSet definition")
 
         fts = []
         for f in func():
             if type(f) is str:
-                _spec = local_state.spec_by_fqn(f)
+                local_state.spec_by_fqn(f)
                 fts.append(f)
             if callable(f):
                 ft = local_state.spec_by_src_name(f.__name__)
@@ -265,3 +268,18 @@ def manifests(save_to_tmp=False):
         return file_name
     else:
         print(ret)
+
+
+def wrap_decorator_err(f):
+    def wrap(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            back_frame = e.__traceback__.tb_frame.f_back
+            tb = pytypes.TracebackType(tb_next=None,
+                                       tb_frame=back_frame,
+                                       tb_lasti=back_frame.f_lasti,
+                                       tb_lineno=back_frame.f_lineno)
+            raise Exception(f"{args[0].__name__}: {str(e)}").with_traceback(tb)
+
+    return wrap
