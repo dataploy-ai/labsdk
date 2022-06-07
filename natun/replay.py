@@ -19,7 +19,7 @@ import types as pytypes
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
 
-from . import durpy, local_state, replay_instructions
+from . import durpy, local_state, replay_instructions, types
 from .pyexp import pyexp, go
 
 
@@ -91,7 +91,7 @@ def replay(spec):
 
         rt = pyexp.New(spec["src"], spec["fqn"])
 
-        df["__natun.ret__"] = df.apply(__map(rt, timestamp_field, headers_field, entity_id_field), axis=1)
+        df["__natun.ret__"] = df.apply(__map(spec, rt, timestamp_field, headers_field, entity_id_field), axis=1)
 
         # flip dataframe to feature_value df
         feature_values = df.filter([entity_id_field, "__natun.ret__", timestamp_field], axis=1) \
@@ -173,7 +173,7 @@ def __dependency_getter(fqn, eid, ts, val):
     return str.encode("")
 
 
-def __map(rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, entity_id_field: str = None):
+def __map(spec, rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, entity_id_field: str = None):
     def map(row: pd.Series):
         ts = row[timestamp_field]
         # row = row.drop(timestamp_field)
@@ -202,8 +202,8 @@ def __map(rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, en
                 inst = pyexp.Instruction(handle=i)
                 replay_instructions.__exec_instruction(inst)
             return json.loads(pyexp.JsonAny(res, "Value"))
-        except RuntimeError as err:
-            raise SystemExit(f"Error while executing PyExp: {str(err)}")
+        except RuntimeError as e:
+            raise types.WrapException(e, spec)
         except Exception as err:
             raise err
 

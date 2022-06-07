@@ -17,6 +17,7 @@ import inspect
 import types as pytypes
 
 from . import types, replay, local_state
+from .pyexp import pyexp
 
 
 def aggr(funcs: [types.AggrFn]):
@@ -102,10 +103,19 @@ def register(primitive, freshness: str, staleness: str, options=None):
             raise Exception("Primitive type not supported")
         options['primitive'] = p
 
+        # take a snapshot of the func frame
+        src_frame = None
+        try:
+            raise Exception()
+        except Exception as e:
+            src_frame = types.PyExpTraceFrame(e.__traceback__.tb_frame.f_back.f_back)
+            pass
+
         # add source coded (decorators stripped)
         src = []
         for line in inspect.getsourcelines(func)[0]:
             if line.startswith('@'):
+                src_frame.f_lineno += 1
                 continue
             src.append(line)
         src = ''.join(src)
@@ -126,10 +136,16 @@ def register(primitive, freshness: str, staleness: str, options=None):
         if hasattr(func, "aggr"):
             options["aggr"] = func.aggr
 
-        # register the feature
+        # build the spec
         fqn = f"{options['name']}.{options['namespace']}"
-        spec = {"kind": "feature", "options": options, "src": src, "src_name": func.__name__, "fqn": fqn}
+        spec = {"kind": "feature", "options": options, "src": src, "src_frame": src_frame, "src_name": func.__name__,
+                "fqn": fqn}
         func.natun_spec = spec
+
+        # try to compile the feature
+        pyexp.New(spec["src"], fqn)
+
+        # register
         func.replay = replay.replay(spec)
         local_state.register_spec(spec)
 
@@ -177,8 +193,21 @@ def feature_set(register=False, options=None):
         if "desc" not in options and func.__doc__ is not None:
             options["desc"] = func.__doc__
 
+        # take a snapshot of the func frame
+        src_frame = None
+        try:
+            raise Exception()
+        except Exception as e:
+            src_frame = types.PyExpTraceFrame(e.__traceback__.tb_frame.f_back.f_back)
+            pass
+        for line in inspect.getsourcelines(func)[0]:
+            if line.startswith('@'):
+                src_frame.f_lineno += 1
+                continue
+
         fqn = f"{options['name']}.{options['namespace']}"
-        spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
+        spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__,
+                "src_frame": src_frame, "fqn": fqn}
         func.natun_spec = spec
         func.historical_get = replay.historical_get(spec)
         if register:
@@ -274,12 +303,14 @@ def wrap_decorator_err(f):
     def wrap(*args, **kwargs):
         try:
             return f(*args, **kwargs)
+        except RuntimeError as e:
+            raise types.WrapException(e, args[0].natun_spec)
         except Exception as e:
             back_frame = e.__traceback__.tb_frame.f_back
             tb = pytypes.TracebackType(tb_next=None,
                                        tb_frame=back_frame,
                                        tb_lasti=back_frame.f_lasti,
                                        tb_lineno=back_frame.f_lineno)
-            raise Exception(f"{args[0].__name__}: {str(e)}").with_traceback(tb)
+            raise Exception(f"in {args[0].__name__}: {str(e)}").with_traceback(tb)
 
     return wrap

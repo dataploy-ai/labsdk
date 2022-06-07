@@ -13,6 +13,8 @@
    4. delocate - macos
    5. delvewheel - windows
 
+It's recommended to use Python3.7 since this is the lowest version we support.
+
 ## Enable "Developer mode"
 Set the environment variable `NATUN_DEV` to `1`
 

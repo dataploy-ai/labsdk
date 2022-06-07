@@ -386,6 +386,10 @@ github.com/natun-ai/natun v0.0.0-20220606151218-3727cae97119 h1:BKwqbK2xQTJ1Bmp4
 github.com/natun-ai/natun v0.0.0-20220606151218-3727cae97119/go.mod h1:ThCTK0Eo+YHkvy+PvuNcv3nvHRrvSZej6N5nk21GCgo=
 github.com/natun-ai/natun v0.0.0-20220606230723-9633b1f1053d h1:zXj9qVCp1nczJ7++xxUtwCOSy+pr7jdgmnWshmzXKe4=
 github.com/natun-ai/natun v0.0.0-20220606230723-9633b1f1053d/go.mod h1:ThCTK0Eo+YHkvy+PvuNcv3nvHRrvSZej6N5nk21GCgo=
+github.com/natun-ai/natun v0.0.0-20220607173130-61595fb9ec4e h1:eA7br/lJpEcPIZTcMBzxxBxcMP/3a82WZvP74tKuLJs=
+github.com/natun-ai/natun v0.0.0-20220607173130-61595fb9ec4e/go.mod h1:ThCTK0Eo+YHkvy+PvuNcv3nvHRrvSZej6N5nk21GCgo=
+github.com/natun-ai/natun v0.0.0-20220607174423-be3678e08fe6 h1:Ao9ZUSwc9payiagCp9zE8FBD3NNmtnljz3wvR+kOpAc=
+github.com/natun-ai/natun v0.0.0-20220607174423-be3678e08fe6/go.mod h1:ThCTK0Eo+YHkvy+PvuNcv3nvHRrvSZej6N5nk21GCgo=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
