@@ -228,9 +228,11 @@ def historical_get(spec):
             until = until.replace(tzinfo=datetime.timezone.utc)
 
         key_feature = spec["options"]["key_feature"]
-        key_feature_spec = local_state.spec_by_fqn(key_feature)
+        _key_feature_spec = local_state.spec_by_fqn(key_feature)
         features = spec["src"]
-        features.remove(key_feature)  # todo greacefully handle if key_feature is not in features
+
+        if key_feature in features:
+            features.remove(key_feature)
 
         df = local_state.__feature_values
         if df.empty:
