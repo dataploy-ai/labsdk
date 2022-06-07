@@ -22,6 +22,15 @@ from natun import types
 spec_registry = []
 
 
+def register_spec(spec):
+    global spec_registry
+    for idx, s in enumerate(spec_registry):
+        if s["fqn"] == spec["fqn"]:
+            spec_registry[idx] = spec
+            return
+    spec_registry.append(spec)
+
+
 def check_valid_fqn(spec, fqn):
     if spec["kind"] != "feature":
         raise Exception(f"`{fqn}` is not a feature")
@@ -40,12 +49,14 @@ def check_valid_fqn(spec, fqn):
 
 
 def spec_by_fqn(fqn: str):
+    global spec_registry
     spec = next(filter(lambda m: m["kind"] == "feature" and m["fqn"] == fqn.split("[")[0], spec_registry), None)
     check_valid_fqn(spec, fqn)
     return spec
 
 
 def spec_by_src_name(src_name: str):
+    global spec_registry
     return next(filter(lambda m: m["kind"] == "feature" and m["src_name"] == src_name, spec_registry), None)
 
 
@@ -59,4 +70,5 @@ def store_feature_values(feature_values):
 
 
 def feature_values():
+    global __feature_values
     return __feature_values.copy()

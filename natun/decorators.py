@@ -53,13 +53,17 @@ def builder(kind: str, options=None):
     return decorator
 
 
+def _stub_feature(**req):
+    pass
+
+
 def register(primitive, freshness: str, staleness: str, options=None):
     if options is None:
         options = {}
 
     def decorator(func):
-        if hasattr(func, "feature_spec"):
-            raise Exception("Feature is already registered")
+        if inspect.signature(func) != inspect.signature(_stub_feature):
+            raise Exception(f"{func.name} have an invalid signature for a Feature definition")
 
         options["freshness"] = freshness
         options["staleness"] = staleness
@@ -71,11 +75,6 @@ def register(primitive, freshness: str, staleness: str, options=None):
 
         if 'desc' not in options and func.__doc__ is not None:
             options['desc'] = func.__doc__
-
-        # verify signature
-        fas = inspect.getfullargspec(func)
-        if len(fas.annotations) != 0 or fas.varkw is None:
-            raise Exception("Invalid signature")
 
         # verify primitive
         p = primitive
@@ -128,9 +127,9 @@ def register(primitive, freshness: str, staleness: str, options=None):
         # register the feature
         fqn = f"{options['name']}.{options['namespace']}"
         spec = {"kind": "feature", "options": options, "src": src, "src_name": func.__name__, "fqn": fqn}
-        func.feature_spec = spec
+        func.natun_spec = spec
         func.replay = replay.replay(spec)
-        local_state.spec_registry.append(spec)
+        local_state.register_spec(spec)
 
         return func
 
@@ -142,14 +141,13 @@ def feature_set(register=False, options=None):
         options = {}
 
     def decorator(func):
-        if hasattr(func, "feature_set_spec"):
-            raise Exception("FeatureSet is already registered")
         if inspect.signature(func) != inspect.signature(lambda: []):
-            raise Exception("Invalid signature")
+            raise Exception(f"{func.name} have an invalid signature for a FeatureSet definition")
 
         fts = []
         for f in func():
             if type(f) is str:
+                _spec = local_state.spec_by_fqn(f)
                 fts.append(f)
             if callable(f):
                 ft = local_state.spec_by_src_name(f.__name__)
@@ -178,10 +176,10 @@ def feature_set(register=False, options=None):
 
         fqn = f"{options['name']}.{options['namespace']}"
         spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
-        func.feature_set_spec = spec
+        func.natun_spec = spec
         func.historical_get = replay.historical_get(spec)
         if register:
-            local_state.spec_registry.append(spec)
+            local_state.register_spec(spec)
         return func
 
     return decorator
