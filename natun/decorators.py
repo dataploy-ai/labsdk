@@ -177,7 +177,7 @@ def register(primitive, freshness: str, staleness: str, options=None):
         pyexp.New(spec["src"].code, fqn)
 
         # register
-        func.new_replay = replay.new_replay(spec)
+        func.replay = replay.new_replay(spec)
         local_state.register_spec(spec)
 
         return func
@@ -245,7 +245,7 @@ def feature_set(register=False, options=None):
         fqn = f"{options['name']}.{options['namespace']}"
         spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
         func.natun_spec = spec
-        func.new_historical_get = replay.new_historical_get(spec)
+        func.historical_get = replay.new_historical_get(spec)
         if register:
             local_state.register_spec(spec)
         return func
