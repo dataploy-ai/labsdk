@@ -1,5 +1,8 @@
+import os
+import sys
+
 import pandas as pd
-import sys, os
+
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 # getting started code
@@ -7,11 +10,12 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import natun
 from natun.stub import *
 
+
 @natun.register(str, freshness='1m', staleness='10h', options={})
 @natun.connector("emails")
 @natun.builder("streaming")
 @natun.aggr([natun.AggrFn.Count])
-def emails_10h(**req):
+def emails_10h(**req: NatunRequest):
     """email over 10 hours"""
     return 1, req["timestamp"], req['payload']['account_id']
 
@@ -56,6 +60,7 @@ deals_10h.replay(df, entity_id_field="account_id")
 emails_deals.replay(df, entity_id_field="account_id")
 
 df = deal_prediction.historical_get(since=pd.to_datetime('2020-1-1'), until=pd.to_datetime('2022-12-31'))
+
 
 # other tests
 

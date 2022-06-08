@@ -16,11 +16,15 @@ import datetime
 import inspect
 import types as pytypes
 
-from . import types, replay, local_state
+from . import types, replay, local_state, stub
 from .pyexp import pyexp
 
 
 def aggr(funcs: [types.AggrFn]):
+    """
+    Register aggregations for the Feature Definition.
+    :param funcs: a list of :func:`types.AggrFn`
+    """
     def decorator(func):
         for f in funcs:
             if f == types.AggrFn.Unknown:
@@ -31,23 +35,38 @@ def aggr(funcs: [types.AggrFn]):
     return decorator
 
 
-def connector(name: str):
+def connector(fqn: str):
+    """
+    Register a DataConnector for the FeatureDefinition.
+    :param fqn: DataConnector Fully Qualified Name(*FQN*)
+    """
     def decorator(func):
-        func.connector = name
+        func.connector = fqn
         return func
 
     return decorator
 
 
-def namespace(name: str):
+def namespace(namespace: str):
+    """
+    Register a namespace for the Feature Definition.
+    When the namespace is not specified, it's assumed to be "default".
+    :param namespace: namespace name
+    """
     def decorator(func):
-        func.namespace = name
+        func.namespace = namespace
         return func
 
     return decorator
 
 
 def builder(kind: str, options=None):
+    """
+    Register a builder for the Feature Definition.
+    :param kind: the kind of the builder.
+    :param options: options for the builder.
+    :return:
+    """
     def decorator(func):
         func.builder = {"kind": kind, "options": options}
         return func
@@ -59,13 +78,41 @@ def _stub_feature(**req):
     pass
 
 
+def _stub_feature_with_req(**req: stub.NatunRequest):
+    pass
+
+
 def register(primitive, freshness: str, staleness: str, options=None):
+    """
+    Register a Feature Definition within the LabSDK.
+
+    A feature definition is a PyExp handler function that process a calculation request and calculates
+    a feature value for it::
+        :param NatunRequest **kwargs: a request bag dictionary(:class:`NatunRequest`)
+        :return: a tuple of (value, timestamp, entity_id) where:
+            - value: the feature value
+            - timestamp: the timestamp of the value - when None, it uses the request timestamp.
+            - entity_id: the entity id of the value - when None, it uses the request entity_id.
+                If the request entity_id is None, it's required to specify an entity_id
+
+    :Example:
+        @register(primitive="my_primitive", freshness="1h", staleness="1h")
+        def my_feature(**req):
+            return "Hello "+ req["entity_id"]
+
+    :param primitive: the primitive type of the feature.
+    :param freshness: the freshness of the feature.
+    :param staleness: the staleness of the feature.
+    :param options: optional options for the feature.
+    :return: a registered Feature Definition
+    """
     if options is None:
         options = {}
 
     @wrap_decorator_err
     def decorator(func):
-        if inspect.signature(func) != inspect.signature(_stub_feature):
+        if inspect.signature(func) != inspect.signature(_stub_feature) and inspect.signature(func) != inspect.signature(
+                _stub_feature_with_req):
             raise Exception(f"{func.__name__} have an invalid signature for a Feature definition")
 
         options["freshness"] = freshness
@@ -103,23 +150,6 @@ def register(primitive, freshness: str, staleness: str, options=None):
             raise Exception("Primitive type not supported")
         options['primitive'] = p
 
-        # take a snapshot of the func frame
-        src_frame = None
-        try:
-            raise Exception()
-        except Exception as e:
-            src_frame = types.PyExpTraceFrame(e.__traceback__.tb_frame.f_back.f_back)
-            pass
-
-        # add source coded (decorators stripped)
-        src = []
-        for line in inspect.getsourcelines(func)[0]:
-            if line.startswith('@'):
-                src_frame.f_lineno += 1
-                continue
-            src.append(line)
-        src = ''.join(src)
-
         # append annotations
         if hasattr(func, "builder"):
             options["builder"] = func.builder
@@ -137,16 +167,17 @@ def register(primitive, freshness: str, staleness: str, options=None):
             options["aggr"] = func.aggr
 
         # build the spec
+        # add source coded (decorators stripped)
+        src = types.PyExpProgram(func)
         fqn = f"{options['name']}.{options['namespace']}"
-        spec = {"kind": "feature", "options": options, "src": src, "src_frame": src_frame, "src_name": func.__name__,
-                "fqn": fqn}
+        spec = {"kind": "feature", "options": options, "src": src, "src_name": func.__name__, "fqn": fqn}
         func.natun_spec = spec
 
         # try to compile the feature
-        pyexp.New(spec["src"], fqn)
+        pyexp.New(spec["src"].code, fqn)
 
         # register
-        func.replay = replay.replay(spec)
+        func.new_replay = replay.new_replay(spec)
         local_state.register_spec(spec)
 
         return func
@@ -155,6 +186,24 @@ def register(primitive, freshness: str, staleness: str, options=None):
 
 
 def feature_set(register=False, options=None):
+    """
+    Register a FeatureSet Definition.
+
+    A feature set definition in the LabSDK is constituted by a function that returns a list of features.
+        You can specify a feature in the list using its FQN or via a variable that hold's the feature definition.
+        When specifying a feature that have aggregations, you **must** specify the feature using its FQN.
+
+    :Example:
+        @feature_set(register=True)
+        def my_feature_set():
+            return [my_feature, "my_other_feature.default[sum]"]
+
+
+    :param register: if True, the feature set will be registered in the LabSDK, and you'll be able to export
+        it's manifest.
+    :param options:
+    :return:
+    """
     if options is None:
         options = {}
 
@@ -193,23 +242,10 @@ def feature_set(register=False, options=None):
         if "desc" not in options and func.__doc__ is not None:
             options["desc"] = func.__doc__
 
-        # take a snapshot of the func frame
-        src_frame = None
-        try:
-            raise Exception()
-        except Exception as e:
-            src_frame = types.PyExpTraceFrame(e.__traceback__.tb_frame.f_back.f_back)
-            pass
-        for line in inspect.getsourcelines(func)[0]:
-            if line.startswith('@'):
-                src_frame.f_lineno += 1
-                continue
-
         fqn = f"{options['name']}.{options['namespace']}"
-        spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__,
-                "src_frame": src_frame, "fqn": fqn}
+        spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
         func.natun_spec = spec
-        func.historical_get = replay.historical_get(spec)
+        func.new_historical_get = replay.new_historical_get(spec)
         if register:
             local_state.register_spec(spec)
         return func
@@ -242,14 +278,14 @@ def __feature_manifest(f):
             t += "\n    - " + a.name.lower()
     if 'timeout' in f['options']:
         t += f"\n  timeout: {_fmt(f['options'], 'timeout')}"
-    t += f"""
+    t += f"""\n
       builder:
         kind: {_fmt(f['options']['builder'], 'kind')}"""
     if f['options']['builder']['options'] is not None:
         for k, v in f['options']['builder']['options']:
             t += f"    {k}: {_fmt(v)}\n"
     t += "\n    pyexp: |"
-    for line in f['src'].split('\n'):
+    for line in f['src'].code.split('\n'):
         t += "\n      " + line
     t += "\n"
     return t
@@ -271,7 +307,9 @@ spec:
 
 
 def manifests(save_to_tmp=False):
-    """manifests will create a list of registered Natun manifests ready to install for your kubernetes cluster
+    """
+    manifests will create a list of registered Natun manifests ready to install for your kubernetes cluster
+
     If save_to_tmp is True, it will save the manifests to a temporary file and return the path to the file.
     Otherwise, it will print the manifests.
     """

@@ -15,7 +15,6 @@
 import datetime
 import json
 import types as pytypes
-import sys
 
 import pandas as pd
 from pandas.tseries.frequencies import to_offset
@@ -69,9 +68,10 @@ def __detect_entity_id(df) -> str:
         return None
 
 
-def replay(spec):
-    def replay(df: pd.DataFrame, timestamp_field: str = None, headers_field: str = None, entity_id_field: str = None,
+def new_replay(spec):
+    def _replay(df: pd.DataFrame, timestamp_field: str = None, headers_field: str = None, entity_id_field: str = None,
                 store_locally=True):
+
         df = df.copy()
         if spec["kind"] != "feature":
             raise Exception("Not a Feature")
@@ -92,7 +92,7 @@ def replay(spec):
         if headers_field is None:
             headers_field = __detect_headers_field(df)
 
-        rt = pyexp.New(spec["src"], spec["fqn"])
+        rt = pyexp.New(spec["src"].code, spec["fqn"])
 
         df["__natun.ret__"] = df.apply(__map(spec, rt, timestamp_field, headers_field, entity_id_field), axis=1)
 
@@ -135,9 +135,21 @@ def replay(spec):
             local_state.store_feature_values(feature_values)
         return feature_values
 
-    def _wrapped(*args, **kwargs):
+    def replay(df: pd.DataFrame, timestamp_field: str = None, headers_field: str = None, entity_id_field: str = None,
+               store_locally=True):
+        """Replay a dataframe on the feature definition to create features values from existing data.
+
+        :param pd.DataFrame df: pandas dataframe with the data to replay
+        :param Optional[str] timestamp_field: the name of the column containing the timestamp of the data.
+        :param Optional[str] headers_field: the name of the column containing the headers of the data.
+        :param Optional[str] entity_id_field: the name of the column containing the entity id of the data.
+        :param bool store_locally: Store the data locally in the feature values (this is required for working with other
+            capabilities such as using the feature as a dependency or adding the data to a FeatureSet). Default is True.
+        :return: pd.DataFrame with the calculated feature values
+        """
+
         try:
-            return replay(*args, **kwargs)
+            return _replay(df, timestamp_field, headers_field, entity_id_field, store_locally)
         except Exception as e:
             back_frame = e.__traceback__.tb_frame.f_back
             tb = pytypes.TracebackType(tb_next=None,
@@ -146,7 +158,7 @@ def replay(spec):
                                        tb_lineno=back_frame.f_lineno)
             raise Exception(f"{spec['src_name']}: {str(e)}").with_traceback(tb)
 
-    return _wrapped
+    return replay
 
 
 def __dependency_getter(fqn, eid, ts, val):
@@ -224,8 +236,8 @@ def __map(spec, rt: pyexp.Runtime, timestamp_field: str, headers_field: str = No
     return map
 
 
-def historical_get(spec):
-    def historical_get(since: datetime.datetime, until: datetime.datetime):
+def new_historical_get(spec):
+    def _historical_get(since: datetime.datetime, until: datetime.datetime):
         if spec["kind"] != "feature_set":
             raise Exception("Not a FeatureSet")
         if isinstance(since, str):
@@ -283,9 +295,16 @@ def historical_get(spec):
 
         return key_df.reset_index(drop=True)
 
-    def _wrapped(*args, **kwargs):
+    def historical_get(since: datetime.datetime, until: datetime.datetime):
+        """
+        Get historical data for a FeatureSet.
+        :param datetime.datetime|str since: start time of the query
+        :param datetime.datetime|str until: end time of the query
+        :return: pd.DataFrame with the historical data of the FeatureSet
+        """
+
         try:
-            return historical_get(*args, **kwargs)
+            return _historical_get(since, until)
         except Exception as e:
             back_frame = e.__traceback__.tb_frame.f_back
             tb = pytypes.TracebackType(tb_next=None,
@@ -294,4 +313,4 @@ def historical_get(spec):
                                        tb_lineno=back_frame.f_lineno)
             raise Exception(f"{spec['src_name']}: {str(e)}").with_traceback(tb)
 
-    return _wrapped
+    return historical_get
