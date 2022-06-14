@@ -178,6 +178,7 @@ def register(primitive, freshness: str, staleness: str, options=None):
 
         # register
         func.replay = replay.new_replay(spec)
+        func.manifest = lambda: __feature_manifest(spec)
         local_state.register_spec(spec)
 
         return func
@@ -246,6 +247,7 @@ def feature_set(register=False, options=None):
         spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
         func.natun_spec = spec
         func.historical_get = replay.new_historical_get(spec)
+        func.manifest = lambda: __feature_set_manifest(spec)
         if register:
             local_state.register_spec(spec)
         return func
