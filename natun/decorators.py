@@ -14,6 +14,7 @@
 
 import datetime
 import inspect
+import re
 import types as pytypes
 
 from . import types, replay, local_state, stub
@@ -259,6 +260,13 @@ def feature_set(register=False, options=None):
     return decorator
 
 
+def _k8s_name(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    name = re.sub('__([A-Z])', r'_\1', name)
+    name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
+    return name.replace("_", "-").lower()
+
+
 def __feature_manifest(f):
     def _fmt(val, field=None):
         if val is None:
@@ -270,7 +278,7 @@ def __feature_manifest(f):
     t = f"""apiVersion: k8s.natun.ai/v1alpha1
 kind: Feature
 metadata:
-  name: {f['options']['name']}
+  name: {_k8s_name(f['options']['name'])}
   namespace: {f['options']['namespace']}"""
     if _fmt(f['options'], 'desc') != "~":
         t += f"""\n  annotations:\n    a8r.io/description: "{_fmt(f['options'], 'desc')}"""""
@@ -301,7 +309,7 @@ def __feature_set_manifest(f):
     return f"""apiVersion: k8s.natun.ai/v1alpha1
 kind: FeatureSet
 metadata:
-  name: {f["options"]["name"]}
+  name: {_k8s_name(f["options"]["name"])}
   namespace: {f["options"]["namespace"]}
 spec:
   timeout: {f["options"]["timeout"]}
