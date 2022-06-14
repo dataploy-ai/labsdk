@@ -68,8 +68,10 @@ class PyExpProgram:
 
         root_node = ast.parse(inspect.getsource(func))
         if len(root_node.body) != 1:
-            raise RuntimeError("PyExpProgram in LabSDK supports only one function definition")
+            raise RuntimeError("PyExpProgram in LabSDK only supports one function definition")
         node = root_node.body[0]
+        if not isinstance(node, ast.FunctionDef):
+            raise RuntimeError("PyExpProgram in LabSDK only supports function definition")
         if node.args.args:
             for arg in node.args.args:
                 arg.annotation = None
