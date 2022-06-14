@@ -306,7 +306,7 @@ metadata:
 
 def __feature_set_manifest(f):
     nl = "\n"
-    return f"""apiVersion: k8s.natun.ai/v1alpha1
+    ret = f"""apiVersion: k8s.natun.ai/v1alpha1
 kind: FeatureSet
 metadata:
   name: {_k8s_name(f["options"]["name"])}
@@ -314,9 +314,10 @@ metadata:
 spec:
   timeout: {f["options"]["timeout"]}
   keyFeature: {f["options"]["key_feature"]}
-  features:
-    {f'{nl}    - '.join(f["src"])}
-"""
+  features:\n"""
+    for ft in f["src"]:
+        ret += f"    - {ft}\n"
+    return ret
 
 
 def manifests(save_to_tmp=False, return_str=False):
