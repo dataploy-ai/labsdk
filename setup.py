@@ -227,7 +227,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
-    install_requires=['pandas'],
+    install_requires=['pandas', 'astunparse'],
 
     ext_modules=[
         setuptools.Extension('natun.pyexp', ["github.com/natun-ai/natun/pkg/pyexp"])
