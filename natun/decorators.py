@@ -25,6 +25,7 @@ def aggr(funcs: [types.AggrFn]):
     Register aggregations for the Feature Definition.
     :param funcs: a list of :func:`types.AggrFn`
     """
+
     def decorator(func):
         for f in funcs:
             if f == types.AggrFn.Unknown:
@@ -40,6 +41,7 @@ def connector(fqn: str):
     Register a DataConnector for the FeatureDefinition.
     :param fqn: DataConnector Fully Qualified Name(*FQN*)
     """
+
     def decorator(func):
         func.connector = fqn
         return func
@@ -53,6 +55,7 @@ def namespace(namespace: str):
     When the namespace is not specified, it's assumed to be "default".
     :param namespace: namespace name
     """
+
     def decorator(func):
         func.namespace = namespace
         return func
@@ -67,6 +70,7 @@ def builder(kind: str, options=None):
     :param options: options for the builder.
     :return:
     """
+
     def decorator(func):
         func.builder = {"kind": kind, "options": options}
         return func
@@ -267,10 +271,10 @@ def __feature_manifest(f):
 kind: Feature
 metadata:
   name: {f['options']['name']}
-  namespace: {f['options']['namespace']}
-  annotations:
-    a8r.io/description: "{_fmt(f['options'], 'desc')}"
-spec:
+  namespace: {f['options']['namespace']}"""
+    if _fmt(f['options'], 'desc') != "~":
+        t += f"""\n  annotations:\n    a8r.io/description: "{_fmt(f['options'], 'desc')}"""""
+    t += f"""\nspec:
   primitive: {_fmt(f['options'], 'primitive')}
   freshness: {_fmt(f['options'], 'freshness')}
   staleness: {_fmt(f['options'], 'staleness')}"""
