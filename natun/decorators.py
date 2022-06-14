@@ -264,16 +264,16 @@ def __feature_manifest(f):
         return "~"
 
     t = f"""apiVersion: k8s.natun.ai/v1alpha1
-    kind: Feature
-    metadata:
-      name: {f['options']['name']}
-      namespace: {f['options']['namespace']}
-      annotations:
-        a8r.io/description: "{_fmt(f['options'], 'desc')}"
-    spec:
-      primitive: {_fmt(f['options'], 'primitive')}
-      freshness: {_fmt(f['options'], 'freshness')}
-      staleness: {_fmt(f['options'], 'staleness')}"""
+kind: Feature
+metadata:
+  name: {f['options']['name']}
+  namespace: {f['options']['namespace']}
+  annotations:
+    a8r.io/description: "{_fmt(f['options'], 'desc')}"
+spec:
+  primitive: {_fmt(f['options'], 'primitive')}
+  freshness: {_fmt(f['options'], 'freshness')}
+  staleness: {_fmt(f['options'], 'staleness')}"""
     if 'aggr' in f['options']:
         t += "\n  aggr:"
         for a in f['options']['aggr']:
