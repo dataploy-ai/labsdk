@@ -319,7 +319,7 @@ spec:
 """
 
 
-def manifests(save_to_tmp=False):
+def manifests(save_to_tmp=False, return_str=False):
     """
     manifests will create a list of registered Natun manifests ready to install for your kubernetes cluster
 
@@ -346,6 +346,8 @@ def manifests(save_to_tmp=False):
         file_name = f.name
         f.close()
         return file_name
+    elif return_str:
+        return ret
     else:
         print(ret)
 
