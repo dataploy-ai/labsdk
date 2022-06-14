@@ -219,7 +219,12 @@ setuptools.setup(
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/natun-ai/labsdk",
+    url="https://natun.ai",
+    project_urls={
+        'Documentation': 'https://docs.natun.ai/',
+        'Source': 'https://github.com/natun-ai/labsdk',
+        'Tracker': 'https://github.com/natun-ai/natun/issues',
+    },
     packages=setuptools.find_packages(exclude="_test"),
     classifiers=[
         "Programming Language :: Python :: 3",
