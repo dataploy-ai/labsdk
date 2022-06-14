@@ -278,9 +278,8 @@ def __feature_manifest(f):
             t += "\n    - " + a.name.lower()
     if 'timeout' in f['options']:
         t += f"\n  timeout: {_fmt(f['options'], 'timeout')}"
-    t += f"""\n
-      builder:
-        kind: {_fmt(f['options']['builder'], 'kind')}"""
+    t += f"""\n  builder:
+    kind: {_fmt(f['options']['builder'], 'kind')}"""
     if f['options']['builder']['options'] is not None:
         for k, v in f['options']['builder']['options']:
             t += f"    {k}: {_fmt(v)}\n"
