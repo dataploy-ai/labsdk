@@ -170,7 +170,6 @@ def __dependency_getter(fqn, eid, ts, val):
         ts = pd.to_datetime(ts)
 
         df = local_state.__feature_values
-        odf = df
         df = df.loc[(df["fqn"] == fqn) & (df["entity_id"] == eid) & (df["timestamp"] <= ts)]
 
         staleness = durpy.from_str(spec["options"]["staleness"])

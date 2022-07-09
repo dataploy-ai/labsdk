@@ -40,10 +40,10 @@ def __exec_instruction(inst: pyexp.Instruction):
 
 
 def _exec_append(inst):
-    df = _get_recent(inst)
     spec = _inst_spec(inst.FQN)
     if not spec["options"]["primitive"].startswith("[]"):
         raise Exception("Append is not supported for scalars")
+    df = _get_recent(inst)
 
     ts = pd.to_datetime(pyexp.PyTimeRFC3339(inst.Timestamp))
     o = {
@@ -59,6 +59,11 @@ def _exec_append(inst):
 
 
 def _exec_incr(inst):
+    spec = _inst_spec(inst.FQN)
+    primitive = spec["options"]["primitive"]
+    if not primitive in ["int", "float"]:
+        raise Exception("Incr is only supported for numbers")
+
     df = _get_recent(inst)
     ts = pd.to_datetime(pyexp.PyTimeRFC3339(inst.Timestamp))
     o = {
@@ -68,7 +73,13 @@ def _exec_incr(inst):
         "fqn": inst.FQN,
     }
     if df is not None:
-        o["value"] = df["value"] + o["value"]
+        if o["value"] is None:
+            o["value"] = 0
+
+        val = float(df["value"]) + float(o["value"])
+        if primitive == "int":
+            val = int(val)
+        o["value"] = val
 
     local_state.store_feature_values(pandas.DataFrame.from_records([o]))
 
