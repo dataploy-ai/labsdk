@@ -27,6 +27,42 @@ from setuptools.glob import glob
 with open("./README.md", "r") as fh:
     long_description = fh.read()
 
+if sys.platform == "win32":
+    """overriding some cygwin specific commands to support windows"""
+    from distutils import cygwinccompiler
+    old_get_msvcr = cygwinccompiler.get_msvcr
+
+
+    def get_msvcr():
+        try:
+            return old_get_msvcr()
+        except:
+            return ["msvcr100"]
+
+
+    cygwinccompiler.get_msvcr = get_msvcr
+
+
+    def get_versions():
+        """ Try to find out the versions of gcc, ld and dllwrap.
+
+        If not possible it returns None for it.
+        """
+        commands = ['gcc --version', 'ld -v', 'dllwrap --version']
+        return tuple([cygwinccompiler._find_exe_version(cmd) for cmd in commands])
+
+
+    cygwinccompiler.get_versions = get_versions
+
+    # Fix issue with no CC that cause hanging
+    import sysconfig
+    from distutils import sysconfig as sc, cygwinccompiler
+
+    sc.get_config_vars()  # first make sure the global config var was created
+    sc._config_vars["CC"] = "gcc"
+    sysconfig.get_config_vars()
+    sysconfig._CONFIG_VARS["CC"] = "gcc"
+
 
 class BuildGoPy(_build_ext):
     """Custom command to build extension from Go source files"""
@@ -68,7 +104,7 @@ class BuildGoPy(_build_ext):
         if not os.path.exists(self.gobin):
             os.mkdir("bin")
         if not os.path.isfile(f"{self.gobin}/gopy"):
-            check_output(["go", "install", "github.com/go-python/gopy@master"], env=env)
+            check_output(["go", "install", "github.com/go-python/gopy@latest"], env=env)
         if not os.path.isfile(f"{self.gobin}/goimports"):
             check_output(["go", "install", "golang.org/x/tools/cmd/goimports@master"], env=env)
 
@@ -112,7 +148,7 @@ class BuildGoPy(_build_ext):
 
         return env
 
-    def build_extension(self, ext) -> None:
+    def build_extension(self, ext: setuptools.extension.Extension) -> None:
         self.ensure_build_tools()
         self.install_binaries()
 
@@ -162,7 +198,8 @@ class BuildGoPy(_build_ext):
 
         # telling the linker where's the so file
         self.compiler.add_include_dir(base_path)
-        self.compiler.add_runtime_library_dir(base_path)
+        if sys.platform != "win32":
+            self.compiler.add_runtime_library_dir(base_path)
         self.compiler.add_library_dir(base_path)
         self.compiler.add_library(re.sub(r"^lib", "", go_ext))
 
