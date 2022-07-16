@@ -30,6 +30,7 @@ with open("./README.md", "r") as fh:
 if sys.platform == "win32":
     """overriding some cygwin specific commands to support windows"""
     from distutils import cygwinccompiler
+
     old_get_msvcr = cygwinccompiler.get_msvcr
 
 
@@ -252,15 +253,15 @@ setuptools.setup(
     name="natun-labsdk",
     version=version,
     author="Almog Baku",
-    author_email="almog@natun.ai",
+    author_email="almog@raptor.ml",
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://natun.ai",
+    url="https://raptor.ml",
     project_urls={
-        'Documentation': 'https://docs.natun.ai/',
-        'Source': 'https://github.com/natun-ai/labsdk',
-        'Tracker': 'https://github.com/natun-ai/natun/issues',
+        'Documentation': 'https://docs.raptor.ml/',
+        'Source': 'https://github.com/raptor-ml/labsdk',
+        'Tracker': 'https://github.com/raptor-ml/natun/issues',
     },
     packages=setuptools.find_packages(exclude="_test"),
     classifiers=[
@@ -272,7 +273,7 @@ setuptools.setup(
     install_requires=['pandas', 'astunparse'],
 
     ext_modules=[
-        setuptools.Extension('natun.pyexp', ["github.com/natun-ai/natun/pkg/pyexp"])
+        setuptools.Extension('natun.pyexp', ["github.com/raptor-ml/natun/pkg/pyexp"])
     ],
     py_modules=['natun', "natun.pyexp"],
     cmdclass={'build_ext': BuildGoPy},

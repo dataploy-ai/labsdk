@@ -98,7 +98,7 @@ class NatunRequest(TypedDict):
     :param Optional[object] payload: the payload of the request (i.e. event data, etc.)
     :param Optional[dict] headers: the headers of the request
 
-    seealso:: https://docs.natun.ai/docs/reference/pyexp/handler-function#input-arguments-via-kwargs
+    seealso:: https://docs.raptor.ml/docs/reference/pyexp/handler-function#input-arguments-via-kwargs
     """
 
     entity_id: Optional[str]

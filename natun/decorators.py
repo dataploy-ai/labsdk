@@ -275,7 +275,7 @@ def __feature_manifest(f):
             return val[field]
         return "~"
 
-    t = f"""apiVersion: k8s.natun.ai/v1alpha1
+    t = f"""apiVersion: k8s.raptor.ml/v1alpha1
 kind: Feature
 metadata:
   name: {_k8s_name(f['options']['name'])}
@@ -306,7 +306,7 @@ metadata:
 
 def __feature_set_manifest(f):
     nl = "\n"
-    ret = f"""apiVersion: k8s.natun.ai/v1alpha1
+    ret = f"""apiVersion: k8s.raptor.ml/v1alpha1
 kind: FeatureSet
 metadata:
   name: {_k8s_name(f["options"]["name"])}
