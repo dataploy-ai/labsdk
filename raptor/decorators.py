@@ -1,4 +1,4 @@
-# Copyright 2022 Natun.
+# Copyright (c) 2022 Raptor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ def _stub_feature(**req):
     pass
 
 
-def _stub_feature_with_req(**req: stub.NatunRequest):
+def _stub_feature_with_req(**req: stub.RaptorRequest):
     pass
 
 
@@ -93,7 +93,7 @@ def register(primitive, freshness: str, staleness: str, options=None):
 
     A feature definition is a PyExp handler function that process a calculation request and calculates
     a feature value for it::
-        :param NatunRequest **kwargs: a request bag dictionary(:class:`NatunRequest`)
+        :param RaptorRequest **kwargs: a request bag dictionary(:class:`RaptorRequest`)
         :return: a tuple of (value, timestamp, entity_id) where:
             - value: the feature value
             - timestamp: the timestamp of the value - when None, it uses the request timestamp.
@@ -176,7 +176,7 @@ def register(primitive, freshness: str, staleness: str, options=None):
         src = types.PyExpProgram(func)
         fqn = f"{options['name']}.{options['namespace']}"
         spec = {"kind": "feature", "options": options, "src": src, "src_name": func.__name__, "fqn": fqn}
-        func.natun_spec = spec
+        func.raptor_spec = spec
 
         # try to compile the feature
         pyexp.New(spec["src"].code, fqn)
@@ -250,7 +250,7 @@ def feature_set(register=False, options=None):
 
         fqn = f"{options['name']}.{options['namespace']}"
         spec = {"kind": "feature_set", "options": options, "src": fts, "src_name": func.__name__, "fqn": fqn}
-        func.natun_spec = spec
+        func.raptor_spec = spec
         func.historical_get = replay.new_historical_get(spec)
         func.manifest = lambda: __feature_set_manifest(spec)
         if register:
@@ -322,7 +322,7 @@ spec:
 
 def manifests(save_to_tmp=False, return_str=False):
     """
-    manifests will create a list of registered Natun manifests ready to install for your kubernetes cluster
+    manifests will create a list of registered Raptor manifests ready to install for your kubernetes cluster
 
     If save_to_tmp is True, it will save the manifests to a temporary file and return the path to the file.
     Otherwise, it will print the manifests.
@@ -358,7 +358,7 @@ def wrap_decorator_err(f):
         try:
             return f(*args, **kwargs)
         except RuntimeError as e:
-            raise types.WrapException(e, args[0].natun_spec)
+            raise types.WrapException(e, args[0].raptor_spec)
         except Exception as e:
             back_frame = e.__traceback__.tb_frame.f_back
             tb = pytypes.TracebackType(tb_next=None,

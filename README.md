@@ -7,4 +7,4 @@ This way, you can build your features in Raptor, and then deploy them to the clo
 
 ### For more information, please visit [Raptor](https://raptor.ml/).
 
-### Issues are welcome via the [Raptor Github](https://github.com/raptor-ml/natun/issues/new/choose?labels=component/labsdk).
+### Issues are welcome via the [Raptor Github](https://github.com/raptor-ml/raptor/issues/new/choose?labels=component/labsdk).

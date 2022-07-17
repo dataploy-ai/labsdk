@@ -2,7 +2,7 @@ module github.com/raptor-ml/labsdk
 
 go 1.18
 
-require github.com/raptor-ml/natun v0.0.0-20220716123453-17320feeff27
+require github.com/raptor-ml/raptor v0.0.0-20220717224528-351ccfd7eeb4
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
@@ -16,7 +16,6 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
-	github.com/go-python/gopy v0.4.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gnostic v0.6.9 // indirect

@@ -7,29 +7,29 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 # getting started code
 
-import natun
-from natun.stub import *
+import raptor
+from raptor.stub import *
 
 
-@natun.register(str, freshness='1m', staleness='10h', options={})
-@natun.connector("emails")
-@natun.builder("streaming")
-@natun.aggr([natun.AggrFn.Count])
-def emails_10h(**req: NatunRequest):
+@raptor.register(str, freshness='1m', staleness='10h', options={})
+@raptor.connector("emails")
+@raptor.builder("streaming")
+@raptor.aggr([raptor.AggrFn.Count])
+def emails_10h(**req: RaptorRequest):
     """email over 10 hours"""
     return 1, req["timestamp"], req['payload']['account_id']
 
 
-@natun.register(str, freshness='1m', staleness='10h', options={})
-@natun.connector("deals")
-@natun.builder("streaming")
-@natun.aggr([natun.AggrFn.Sum, natun.AggrFn.Avg, natun.AggrFn.Max, natun.AggrFn.Min])
+@raptor.register(str, freshness='1m', staleness='10h', options={})
+@raptor.connector("deals")
+@raptor.builder("streaming")
+@raptor.aggr([raptor.AggrFn.Sum, raptor.AggrFn.Avg, raptor.AggrFn.Max, raptor.AggrFn.Min])
 def deals_10h(**req):
     """sum/avg/min/max of deal amount over 10 hours"""
     return req['payload']["amount"], req["timestamp"], req['payload']["account_id"]
 
 
-@natun.register('headless', freshness='-1', staleness='-1', options={})
+@raptor.register('headless', freshness='-1', staleness='-1', options={})
 def emails_deals(**req):
     """emails/deal[avg] rate over 10 hours"""
     e, _ = f("emails_10h.default[count]", req['entity_id'])
@@ -39,12 +39,12 @@ def emails_deals(**req):
     return e / d
 
 
-@natun.feature_set(register=True)
+@raptor.feature_set(register=True)
 def deal_prediction():
     return "emails_10h.default[count]", "deals_10h.default[sum]", emails_deals
 
 
-@natun.feature_set(register=True)
+@raptor.feature_set(register=True)
 def deal_prediction():
     return "emails_10h.default[count]", "deals_10h.default[sum]", emails_deals
 
@@ -64,7 +64,7 @@ df = deal_prediction.historical_get(since=pd.to_datetime('2020-1-1'), until=pd.t
 
 # other tests
 
-@natun.register(int, freshness='1m', staleness='10m', options={})
+@raptor.register(int, freshness='1m', staleness='10m', options={})
 def simple(**req):
     age = req['payload']["age"]
     weight = req['payload']["weight"]
@@ -106,13 +106,13 @@ df = pd.DataFrame.from_records([
 df['event_at'] = pd.to_datetime(df['event_at'])
 
 
-@natun.register(int, freshness='1m', staleness='10m', options={})
+@raptor.register(int, freshness='1m', staleness='10m', options={})
 def simple(**req):
     pass
 
 
-@natun.register(int, freshness='1m', staleness='30m', options={})
-@natun.aggr([natun.AggrFn.Sum, natun.AggrFn.Count, natun.AggrFn.Max])
+@raptor.register(int, freshness='1m', staleness='30m', options={})
+@raptor.aggr([raptor.AggrFn.Sum, raptor.AggrFn.Count, raptor.AggrFn.Max])
 def commits_30m(**req):
     """sum/max/count of commits over 30 minutes"""
 
@@ -126,7 +126,7 @@ def commits_30m(**req):
 commits_30m.replay(df, entity_id_field="account_id")
 
 
-@natun.register(int, freshness='1m', staleness='30m', options={})
+@raptor.register(int, freshness='1m', staleness='30m', options={})
 def commits_30m_greater_2(**req):
     res, ts = f("commits_30m.default[sum]", req['entity_id'])
     """sum/max/count of commits over 30 minutes"""
@@ -136,7 +136,7 @@ def commits_30m_greater_2(**req):
 commits_30m_greater_2.replay(df, entity_id_field='account_id')
 
 
-@natun.feature_set()
+@raptor.feature_set()
 def newset():
     return "commits_30m.default[sum]", commits_30m_greater_2
 

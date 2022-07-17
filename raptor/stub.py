@@ -1,4 +1,4 @@
-# Copyright 2022 Natun.
+# Copyright (c) 2022 Raptor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -87,8 +87,8 @@ def incr_feature(fqn: str, entity_id: str, by: float, timestamp=None):
     pass
 
 
-class NatunRequest(TypedDict):
-    """NatunRequest is the bag of arguments the every PyExp program receive while calculating feature value.
+class RaptorRequest(TypedDict):
+    """RaptorRequest is the bag of arguments the every PyExp program receive while calculating feature value.
 
     It is a dictionary that consist with the following keys::
 
@@ -98,7 +98,7 @@ class NatunRequest(TypedDict):
     :param Optional[object] payload: the payload of the request (i.e. event data, etc.)
     :param Optional[dict] headers: the headers of the request
 
-    seealso:: https://docs.raptor.ml/docs/reference/pyexp/handler-function#input-arguments-via-kwargs
+    seealso:: https://raptor.ml/docs/reference/pyexp/handler-function#input-arguments-via-kwargs
     """
 
     entity_id: Optional[str]

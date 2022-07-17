@@ -1,4 +1,4 @@
-# Copyright 2022 Natun.
+# Copyright (c) 2022 Raptor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -250,7 +250,7 @@ if os.environ.get("BUILD_VERSION") is not None:
     version = os.environ.get("BUILD_VERSION")
 
 setuptools.setup(
-    name="natun-labsdk",
+    name="raptor-labsdk",
     version=version,
     author="Almog Baku",
     author_email="almog@raptor.ml",
@@ -259,9 +259,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://raptor.ml",
     project_urls={
-        'Documentation': 'https://docs.raptor.ml/',
+        'Documentation': 'https://raptor.ml/',
         'Source': 'https://github.com/raptor-ml/labsdk',
-        'Tracker': 'https://github.com/raptor-ml/natun/issues',
+        'Tracker': 'https://github.com/raptor-ml/raptor/issues',
     },
     packages=setuptools.find_packages(exclude="_test"),
     classifiers=[
@@ -273,9 +273,9 @@ setuptools.setup(
     install_requires=['pandas', 'astunparse'],
 
     ext_modules=[
-        setuptools.Extension('natun.pyexp', ["github.com/raptor-ml/natun/pkg/pyexp"])
+        setuptools.Extension('raptor.pyexp', ["github.com/raptor-ml/raptor/pkg/pyexp"])
     ],
-    py_modules=['natun', "natun.pyexp"],
+    py_modules=['raptor', "raptor.pyexp"],
     cmdclass={'build_ext': BuildGoPy},
     zip_safe=False,
 

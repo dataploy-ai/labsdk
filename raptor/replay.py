@@ -1,4 +1,4 @@
-# Copyright 2022 Natun.
+# Copyright (c) 2022 Raptor.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -94,13 +94,13 @@ def new_replay(spec):
 
         rt = pyexp.New(spec["src"].code, spec["fqn"])
 
-        df["__natun.ret__"] = df.apply(__map(spec, rt, timestamp_field, headers_field, entity_id_field), axis=1)
+        df["__raptor.ret__"] = df.apply(__map(spec, rt, timestamp_field, headers_field, entity_id_field), axis=1)
 
         # flip dataframe to feature_value df
-        feature_values = df.filter([entity_id_field, "__natun.ret__", timestamp_field], axis=1) \
+        feature_values = df.filter([entity_id_field, "__raptor.ret__", timestamp_field], axis=1) \
             .rename(columns={
             entity_id_field: "entity_id",
-            "__natun.ret__": "value",
+            "__raptor.ret__": "value",
             timestamp_field: "timestamp",
         })
 

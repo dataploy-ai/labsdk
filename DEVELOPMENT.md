@@ -34,5 +34,5 @@ If you need to recompile the PyExp library, it's recommended to use GoPy make sc
 
 ```$ make cleanup local-build PHYTHON=python3```
 
-You can also place a `replace` directive in the `go.mod` file to replace the upstream Natun repo
+You can also place a `replace` directive in the `go.mod` file to replace the upstream Raptor repo
 with your local version. Don't forget to remove it before committing your changes!

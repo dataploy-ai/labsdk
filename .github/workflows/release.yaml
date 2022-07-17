@@ -134,7 +134,7 @@ jobs:
           CIBW_ENVIRONMENT: BUILD_MATRIX="${{ steps.platform_data.outputs.data }}" BUILD_VERSION="${{ needs.version.outputs.version }}"
           CIBW_ENVIRONMENT_LINUX: BUILD_MATRIX="${{ steps.platform_data.outputs.data }}" BUILD_VERSION="${{ needs.version.outputs.version }}" PATH=$PATH:/$HOME/.go/bin
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path natun/pyexp -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path raptor/pyexp -w {dest_dir} {wheel}"
 
           CIBW_MANYLINUX_X86_64_IMAGE: 'manylinux_2_24'
           CIBW_MANYLINUX_AARCH64_IMAGE: 'manylinux_2_24'
@@ -192,7 +192,7 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.version }}
           files: dist/*
-          body: Released to https://pypi.org/project/natun-labsdk/${{ needs.version.outputs.version }}/
+          body: Released to https://pypi.org/project/raptor-labsdk/${{ needs.version.outputs.version }}/
           prerelease: ${{ needs.version.outputs.prerelease }}
           name: Version ${{ needs.version.outputs.version }}
           generate_release_notes: true

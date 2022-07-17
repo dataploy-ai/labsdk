@@ -3,6 +3,6 @@
 build/
 dist/
 bin/
-natun/pyexp/
+raptor/pyexp/
 *.egg-info/
 .DS_Store

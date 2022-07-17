@@ -100,8 +100,6 @@ github.com/go-openapi/jsonreference v0.20.0/go.mod h1:Ag74Ico3lPc+zR+qjn4XBUmXym
 github.com/go-openapi/swag v0.19.5/go.mod h1:POnQmlKehdgb5mhVOsnJFsivZCEZ/vjK9gh66Z9tfKk=
 github.com/go-openapi/swag v0.21.1 h1:wm0rhTb5z7qpJRHBdPOMuY4QjVUMbF6/kwoYeRAOrKU=
 github.com/go-openapi/swag v0.21.1/go.mod h1:QYRuS/SOXUCsnplDa677K7+DxSOj6IPNl/eQntq43wQ=
-github.com/go-python/gopy v0.4.5 h1:cwnd24UKA91vFFZoRvavb/vzBSKV99Gp3+2d5+jTG0U=
-github.com/go-python/gopy v0.4.5/go.mod h1:tlA/KcD7rM8B+NQJR4SASwiinfKY0aiMFanHszR8BZA=
 github.com/gogo/protobuf v1.3.0/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=
@@ -241,8 +239,8 @@ github.com/prometheus/common v0.37.0 h1:ccBbHCgIiT9uSoFY0vX8H3zsNR5eLt17/RQLUvn8
 github.com/prometheus/procfs v0.7.3 h1:4jVXhlkAyzOScmCkXBTOLRLTz8EeU+eyjrwB/EPq0VU=
 github.com/qri-io/starlib v0.5.0 h1:NlveoBAhO6mNgM7+JpM9QlHh3/3pOtOiH6iXaqSdVK0=
 github.com/qri-io/starlib v0.5.0/go.mod h1:FpVumyB2CMrKIrjf39fAi4uydYWVvnWEvXEOwfzZRHY=
-github.com/raptor-ml/natun v0.0.0-20220716123453-17320feeff27 h1:x/cGSaLM432ss2dN4sCHreUrBqvZD9KePmHAVy0AVHA=
-github.com/raptor-ml/natun v0.0.0-20220716123453-17320feeff27/go.mod h1:LVf2zaoOEm9hKZ7sHytDlLfzc1JLRWww7MRNEArhmxY=
+github.com/raptor-ml/raptor v0.0.0-20220717224528-351ccfd7eeb4 h1:qKwDrKjY8+PFo4hGMw3bHt3xqy+HzxfjbXlEktkU+zI=
+github.com/raptor-ml/raptor v0.0.0-20220717224528-351ccfd7eeb4/go.mod h1:cQ4bfHExt5BPh5uDBKitUmpzgNjD1mjGJgmAatLfiPE=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.8.1 h1:geMPLpDpQOgVyCg5z5GoRwLHepNdb71NXb67XFkP+Eg=
