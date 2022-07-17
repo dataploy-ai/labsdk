@@ -2,7 +2,10 @@ module github.com/raptor-ml/labsdk
 
 go 1.18
 
-require github.com/raptor-ml/raptor v0.0.0-20220717224528-351ccfd7eeb4
+require (
+	github.com/go-python/gopy v0.4.5
+	github.com/raptor-ml/raptor v0.0.0-20220717224528-351ccfd7eeb4
+)
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect

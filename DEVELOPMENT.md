@@ -16,10 +16,6 @@
 
 It's recommended to use Python3.7 since this is the lowest version we support.
 
-## Enable "Developer mode"
-
-Set the environment variable `NATUN_DEV` to `1`
-
 ## Compiling the module locally
 
 You can utilize the Make script to compile the module:
@@ -32,7 +28,7 @@ The makefile is basically sugaring the `setup.py` and mimicking the CI.
 
 If you need to recompile the PyExp library, it's recommended to use GoPy make script. Just run:
 
-```$ make cleanup local-build PHYTHON=python3```
+```$ make cleanup local-build PYTHON=python3```
 
 You can also place a `replace` directive in the `go.mod` file to replace the upstream Raptor repo
 with your local version. Don't forget to remove it before committing your changes!
