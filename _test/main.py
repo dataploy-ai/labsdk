@@ -70,7 +70,6 @@ def views(**req):
 
 df = pd.read_csv("https://gist.githubusercontent.com/AlmogBaku/a1b331615eaf1284432d2eecc5fe60bc/raw/deals.csv")
 res = views.replay(df, entity_id_field="account_id")
-res.show()
 
 
 # other tests
