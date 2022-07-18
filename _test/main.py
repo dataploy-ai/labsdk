@@ -62,6 +62,17 @@ emails_deals.replay(df, entity_id_field="account_id")
 df = deal_prediction.historical_get(since=pd.to_datetime('2020-1-1'), until=pd.to_datetime('2022-12-31'))
 
 
+## counters
+@raptor.register(int, '-1', '-1')
+def views(**req):
+    incr_feature("views.default", req["entity_id"], 1)
+
+
+df = pd.read_csv("https://gist.githubusercontent.com/AlmogBaku/a1b331615eaf1284432d2eecc5fe60bc/raw/deals.csv")
+res = views.replay(df, entity_id_field="account_id")
+res.show()
+
+
 # other tests
 
 @raptor.register(int, freshness='1m', staleness='10m', options={})

@@ -3,6 +3,7 @@ module github.com/raptor-ml/labsdk
 go 1.18
 
 require (
+	github.com/go-logr/logr v1.2.3
 	github.com/go-python/gopy v0.4.5
 	github.com/raptor-ml/raptor v0.0.0-20220717224528-351ccfd7eeb4
 )
@@ -15,7 +16,6 @@ require (
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect

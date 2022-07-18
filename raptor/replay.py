@@ -94,7 +94,8 @@ def new_replay(spec):
 
         rt = pyexp.New(spec["src"].code, spec["fqn"])
 
-        df["__raptor.ret__"] = df.apply(__map(spec, rt, timestamp_field, headers_field, entity_id_field), axis=1)
+        df["__raptor.ret__"] = df.apply(__replay_map(spec, rt, timestamp_field, headers_field, entity_id_field), axis=1)
+        df = df.dropna(subset=['__raptor.ret__'])
 
         # flip dataframe to feature_value df
         feature_values = df.filter([entity_id_field, "__raptor.ret__", timestamp_field], axis=1) \
@@ -108,6 +109,8 @@ def new_replay(spec):
             feature_values.insert(0, "fqn", spec["fqn"])
             if store_locally:
                 local_state.store_feature_values(feature_values)
+                fv = local_state.feature_values()
+                return fv.loc[fv["fqn"] == spec["fqn"]]
             return feature_values
 
         # aggregations
@@ -133,6 +136,8 @@ def new_replay(spec):
                  var_name="fqn", value_name="value")
         if store_locally:
             local_state.store_feature_values(feature_values)
+            fv = local_state.feature_values()
+            return fv.loc[fv["fqn"] == spec["fqn"]]
         return feature_values
 
     def replay(df: pd.DataFrame, timestamp_field: str = None, headers_field: str = None, entity_id_field: str = None,
@@ -198,7 +203,7 @@ def __dependency_getter(fqn, eid, ts, val):
     return str.encode("")
 
 
-def __map(spec, rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, entity_id_field: str = None):
+def __replay_map(spec, rt: pyexp.Runtime, timestamp_field: str, headers_field: str = None, entity_id_field: str = None):
     def map(row: pd.Series):
         ts = row[timestamp_field]
         # row = row.drop(timestamp_field)
