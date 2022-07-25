@@ -37,14 +37,14 @@ def aggr(funcs: [types.AggrFn]):
     return decorator
 
 
-def connector(fqn: str):
+def connector(name: str, namespace: str = ""):
     """
     Register a DataConnector for the FeatureDefinition.
     :param fqn: DataConnector Fully Qualified Name(*FQN*)
     """
 
     def decorator(func):
-        func.connector = fqn
+        func.connector = {"name": name, "namespace": namespace}
         return func
 
     return decorator
@@ -158,8 +158,6 @@ def register(primitive, freshness: str, staleness: str, options=None):
         # append annotations
         if hasattr(func, "builder"):
             options["builder"] = func.builder
-        if "builder" not in options:
-            options["builder"] = {"kind": "expression", "options": None}
 
         if hasattr(func, "namespace"):
             options["namespace"] = func.namespace
@@ -169,6 +167,10 @@ def register(primitive, freshness: str, staleness: str, options=None):
         if hasattr(func, "connector"):
             options["connector"] = func.connector
         if hasattr(func, "aggr"):
+            for f in func.aggr:
+                if not f.supports(options["primitive"]):
+                    raise Exception(
+                        f"{func.__name__} aggr function {f} not supported for primitive {options['primitive']}")
             options["aggr"] = func.aggr
 
         # build the spec
@@ -292,11 +294,16 @@ metadata:
             t += "\n    - " + a.name.lower()
     if 'timeout' in f['options']:
         t += f"\n  timeout: {_fmt(f['options'], 'timeout')}"
-    t += f"""\n  builder:
-    kind: {_fmt(f['options']['builder'], 'kind')}"""
-    if f['options']['builder']['options'] is not None:
-        for k, v in f['options']['builder']['options']:
-            t += f"    {k}: {_fmt(v)}\n"
+    if 'connector' in f['options']:
+        t += f"\n  connector: \n    name: {_fmt(f['options']['connector'], 'name')}"
+        if 'namespace' in f['options']['connector'] and f['options']['connector']['namespace'] != "":
+            t += f"\n    namespace: {_fmt(f['options']['connector'], 'namespace')}"
+    t += "\n  builder:"
+    if 'builder' in f['options']:
+        t += f"\n    kind: {_fmt(f['options']['builder'], 'kind')}"
+        if f['options']['builder']['options'] is not None:
+            for k, v in f['options']['builder']['options']:
+                t += f"    {k}: {_fmt(v)}\n"
     t += "\n    pyexp: |"
     for line in f['src'].code.split('\n'):
         t += "\n      " + line
@@ -320,7 +327,7 @@ spec:
     return ret
 
 
-def manifests(save_to_tmp=False, return_str=False):
+def manifests(save_to_tmp=False):
     """
     manifests will create a list of registered Raptor manifests ready to install for your kubernetes cluster
 
@@ -347,10 +354,8 @@ def manifests(save_to_tmp=False, return_str=False):
         file_name = f.name
         f.close()
         return file_name
-    elif return_str:
-        return ret
     else:
-        print(ret)
+        return ret
 
 
 def wrap_decorator_err(f):

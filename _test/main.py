@@ -20,7 +20,7 @@ def emails_10h(**req: RaptorRequest):
     return 1, req["timestamp"], req['payload']['account_id']
 
 
-@raptor.register(str, freshness='1m', staleness='10h', options={})
+@raptor.register(float, freshness='1m', staleness='10h', options={})
 @raptor.connector("deals")
 @raptor.builder("streaming")
 @raptor.aggr([raptor.AggrFn.Sum, raptor.AggrFn.Avg, raptor.AggrFn.Max, raptor.AggrFn.Min])
@@ -90,26 +90,26 @@ def simple(**req):
 df = pd.DataFrame.from_records([
     {'event_at': '2022-01-01 12:00:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 1},
     {'event_at': '2022-01-01 13:10:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 1},
-    {'event_at': '2022-01-01 13:20:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 1},
-    {'event_at': '2022-01-01 14:00:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 3},
-    {'event_at': '2022-01-01 14:10:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 1},
-    {'event_at': '2022-01-01 14:20:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 4},
+    {'event_at': '2022-01-01 13:20:00+00:00', 'account_id': 'ada', 'subject': 'fixed_bug', 'commit_count': 1},
+    {'event_at': '2022-01-01 14:00:00+00:00', 'account_id': 'ada', 'subject': 'deployed', 'commit_count': 3},
+    {'event_at': '2022-01-01 14:10:00+00:00', 'account_id': 'ada', 'subject': 'developed', 'commit_count': 1},
+    {'event_at': '2022-01-01 14:20:00+00:00', 'account_id': 'ada', 'subject': 'built_model', 'commit_count': 4},
     {'event_at': '2022-01-01 14:30:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 3},
-    {'event_at': '2022-01-01 14:40:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 2},
+    {'event_at': '2022-01-01 14:40:00+00:00', 'account_id': 'ada', 'subject': 'experimented', 'commit_count': 2},
     {'event_at': '2022-01-01 15:30:00+00:00', 'account_id': 'ada', 'subject': 'wrote_code', 'commit_count': 1},
-    {'event_at': '2022-01-01 12:00:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 12:20:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 2},
-    {'event_at': '2022-01-01 13:40:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 15:00:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 15:10:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 4},
-    {'event_at': '2022-01-01 15:20:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 5},
-    {'event_at': '2022-01-01 15:30:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 15:40:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 2},
-    {'event_at': '2022-01-01 15:50:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 16:00:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 2},
-    {'event_at': '2022-01-01 16:10:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 16:20:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 1},
-    {'event_at': '2022-01-01 16:30:00+00:00', 'account_id': 'brian', 'subject': '', 'commit_count': 3},
+    {'event_at': '2022-01-01 12:00:00+00:00', 'account_id': 'brian', 'subject': 'developed', 'commit_count': 1},
+    {'event_at': '2022-01-01 12:20:00+00:00', 'account_id': 'brian', 'subject': 'wrote_code', 'commit_count': 2},
+    {'event_at': '2022-01-01 13:40:00+00:00', 'account_id': 'brian', 'subject': 'experimented', 'commit_count': 1},
+    {'event_at': '2022-01-01 15:00:00+00:00', 'account_id': 'brian', 'subject': 'developed', 'commit_count': 1},
+    {'event_at': '2022-01-01 15:10:00+00:00', 'account_id': 'brian', 'subject': 'wrote_code', 'commit_count': 4},
+    {'event_at': '2022-01-01 15:20:00+00:00', 'account_id': 'brian', 'subject': 'developed', 'commit_count': 5},
+    {'event_at': '2022-01-01 15:30:00+00:00', 'account_id': 'brian', 'subject': 'wrote_code', 'commit_count': 1},
+    {'event_at': '2022-01-01 15:40:00+00:00', 'account_id': 'brian', 'subject': 'experimented', 'commit_count': 2},
+    {'event_at': '2022-01-01 15:50:00+00:00', 'account_id': 'brian', 'subject': 'developed', 'commit_count': 1},
+    {'event_at': '2022-01-01 16:00:00+00:00', 'account_id': 'brian', 'subject': 'wrote_code', 'commit_count': 2},
+    {'event_at': '2022-01-01 16:10:00+00:00', 'account_id': 'brian', 'subject': 'built_model', 'commit_count': 1},
+    {'event_at': '2022-01-01 16:20:00+00:00', 'account_id': 'brian', 'subject': 'built_model', 'commit_count': 1},
+    {'event_at': '2022-01-01 16:30:00+00:00', 'account_id': 'brian', 'subject': 'experimented', 'commit_count': 3},
 ])
 
 # convert `event_at` column from string to datetime
@@ -120,6 +120,13 @@ df['event_at'] = pd.to_datetime(df['event_at'])
 def simple(**req):
     pass
 
+
+@raptor.register(str, freshness='10m', staleness='2h', options={})
+@raptor.aggr([raptor.AggrFn.DistinctCount])
+def unique_tasks_over_2h(**req):
+    return req['payload']['subject']
+
+unique_tasks_over_2h.replay(df, entity_id_field="account_id")
 
 @raptor.register(int, freshness='1m', staleness='30m', options={})
 @raptor.aggr([raptor.AggrFn.Sum, raptor.AggrFn.Count, raptor.AggrFn.Max])
@@ -150,6 +157,7 @@ commits_30m_greater_2.replay(df, entity_id_field='account_id')
 def newset():
     return "commits_30m.default[sum]", commits_30m_greater_2
 
+print(raptor.manifests())
 
 ret = newset.historical_get(since=pd.to_datetime('2019-12-04 00:00'), until=pd.to_datetime('2023-01-04 00:00'))
 print(ret)

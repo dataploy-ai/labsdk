@@ -117,19 +117,22 @@ def new_replay(spec):
         feature_values = feature_values.set_index('timestamp')
         win = to_offset(durpy.from_str(spec["options"]["staleness"]))
         fields = []
-        for aggr in spec["options"]["aggr"]:
-            aggr = aggr.name.lower()
 
-            aggrf = aggr
-            if aggrf == "avg":
-                aggrf = "mean"
-            f = f'{spec["fqn"]}[{aggr}]'
-            feature_values[f] = feature_values \
-                .groupby(["entity_id"]) \
-                .rolling(win)["value"] \
-                .agg(aggrf) \
-                .reset_index(0, drop=True)
+        val_field = "value"
+        if spec["options"]["primitive"] == "string":
+            feature_values["f_value"] = feature_values["value"].factorize()[0]
+            val_field = "f_value"
+
+        for aggr in spec["options"]["aggr"]:
+            f = f'{spec["fqn"]}[{aggr.value}]'
+
+            feature_values[f] = aggr.apply(feature_values.groupby(["entity_id"]).rolling(win)[val_field]). \
+                reset_index(0, drop=True)
+
             fields.append(f)
+
+        if "f_value" in feature_values.columns:
+            feature_values = feature_values.drop("f_value", axis=1)
 
         feature_values = feature_values.reset_index().drop(columns=["value"]). \
             melt(id_vars=["timestamp", "entity_id"], value_vars=fields,
@@ -264,7 +267,7 @@ def new_historical_get(spec):
         if key_feature in features:
             features.remove(key_feature)
 
-        df = local_state.__feature_values
+        df = local_state.feature_values()
         if df.empty:
             raise Exception("No data found. Have you Replayed on your data?")
 

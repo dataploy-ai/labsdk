@@ -18,15 +18,39 @@ import types
 from enum import Enum
 
 import astunparse as astunparse
+import pandas as pd
 
 
 class AggrFn(Enum):
-    Unknown = 0
-    Sum = 1
-    Avg = 2
-    Max = 3
-    Min = 4
-    Count = 5
+    Unknown = 'unknown'
+    Sum = 'sum'
+    Avg = 'avg'
+    Max = 'max'
+    Min = 'min'
+    Count = 'count'
+    DistinctCount = 'distinct_count'
+
+    def supports(self, type):
+        if self == AggrFn.Unknown:
+            return False
+        if self in (AggrFn.Sum, AggrFn.Avg, AggrFn.Max, AggrFn.Min):
+            return type in ('int', 'float')
+        return True
+
+    def apply(self, rgb: pd.core.window.RollingGroupby):
+        if self == AggrFn.Sum:
+            return rgb.sum()
+        if self == AggrFn.Avg:
+            return rgb.mean()
+        if self == AggrFn.Max:
+            return rgb.max()
+        if self == AggrFn.Min:
+            return rgb.min()
+        if self == AggrFn.Count:
+            return rgb.count()
+        if self == AggrFn.DistinctCount:
+            return rgb.apply(lambda x: pd.Series(x).nunique())
+        raise Exception(f"Unknown AggrFn {self}")
 
 
 def WrapException(e: Exception, spec, *args, **kwargs):
